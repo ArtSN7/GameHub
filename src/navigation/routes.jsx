@@ -1,5 +1,3 @@
-import Home from '@/pages/Home';
-
 /**
  * @typedef {object} Route
  * @property {string} path
@@ -11,6 +9,12 @@ import Home from '@/pages/Home';
 /**
  * @type {Route[]}
  */
+
+
+import Home from '@/pages/HomePage/Home';
+
+
 export const routes = [
   { path: '/', Component: Home },
+  { path: '/games/*', Component: Home },
 ];

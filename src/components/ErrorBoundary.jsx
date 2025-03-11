@@ -1,3 +1,10 @@
+/** This is a React class component called ErrorBoundary, 
+ * designed to catch and handle JavaScript errors in its child component tree.
+ * It’s a mechanism to gracefully manage errors in a React application, 
+ * preventing the entire app from crashing when something goes wrong.
+*/
+
+
 import { Component } from 'react';
 
 /**
