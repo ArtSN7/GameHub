@@ -12,9 +12,10 @@
 
 
 import Home from '@/pages/HomePage/Home';
+import BlackjackPage from '@/pages/Blackjack/Blackjack';
 
 
 export const routes = [
   { path: '/', Component: Home },
-  { path: '/games/*', Component: Home },
+  { path: '/games/blackjack', Component: BlackjackPage },
 ];
