@@ -18,7 +18,7 @@ export default function GameOptions() {
   };
 
   const playTexasHoldEm = () => {
-    navigate('/games/texas-holdem');
+    navigate('/games/texas');
   };
 
   const playSlots = () => {
@@ -26,7 +26,7 @@ export default function GameOptions() {
   };
 
   const playScratchTheCard = () => {
-    navigate('/games/scratch-the-card');
+    navigate('/games/scratch');
   };
 
   return (

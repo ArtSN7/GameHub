@@ -1,6 +1,6 @@
 import { Link }from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { ChevronRight, Wallet, Menu, Spade, Coins, Bomb } from "lucide-react"
+import { Menu, Spade } from "lucide-react"
 
 
 export default function Header() {
@@ -15,14 +15,14 @@ export default function Header() {
         </div>
 
         <div className="hidden md:flex items-center space-x-8">
-          <Link to="#" className="text-sm font-medium hover:text-blue-500 transition-colors">
-            Games
+          <Link to="/bets" className="text-sm font-medium hover:text-blue-500 transition-colors">
+            Bets
           </Link>
-          <Link to="#" className="text-sm font-medium hover:text-blue-500 transition-colors">
-            Rewards
-          </Link>
-          <Link to="#" className="text-sm font-medium hover:text-blue-500 transition-colors">
+          <Link to="/leaderboard" className="text-sm font-medium hover:text-blue-500 transition-colors">
             Leaderboard
+          </Link>
+          <Link to="/balance" className="text-sm font-medium hover:text-blue-500 transition-colors">
+            Balance
           </Link>
         </div>
 
