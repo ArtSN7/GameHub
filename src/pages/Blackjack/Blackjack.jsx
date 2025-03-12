@@ -111,8 +111,8 @@ export default function BlackjackPage() {
   };
 
   const startGame = () => {
-    if (bet < 1 || bet > balance) {
-      setMessage("Bet must be between 0 and your current balance");
+    if (bet < 10 || bet > balance) {
+      setMessage("Bet must be between 10 and your current balance");
       return;
     }
 
@@ -203,7 +203,7 @@ export default function BlackjackPage() {
         setMessage(`Hand ${activeHandIndex + 1} busted. Playing Hand ${activeHandIndex + 2} now.`);
       } else {
         setGameState(GAME_STATE.GAME_OVER);
-        setMessage("You busted! Game over.");
+        setMessage(newHands.length > 1 ? "You busted on all hands! Game over." : "You busted! Game over.");
         setResult("lose");
         setLastWin(0);
       }
@@ -227,8 +227,7 @@ export default function BlackjackPage() {
       !playerHands[activeHandIndex] ||
       playerHands[activeHandIndex].length !== 2 ||
       balance < handBets[activeHandIndex]
-    )
-      return;
+    ) return;
 
     const doubleAmount = handBets[activeHandIndex];
     if (balance < doubleAmount) {
@@ -249,7 +248,7 @@ export default function BlackjackPage() {
     currentDeck = currentDeck.slice(1);
     setDeck(currentDeck);
 
-    console.log("Dealt card in doubleDown:", card);
+    console.log("Dealt card in double Down:", card);
 
     const newHands = [...playerHands];
     newHands[activeHandIndex] = [...newHands[activeHandIndex], card];
@@ -262,11 +261,19 @@ export default function BlackjackPage() {
 
     if (newScore > 21) {
       setGameState(GAME_STATE.GAME_OVER);
-      setMessage("You busted on Double Down! Game over.");
+      setMessage(
+        newHands.length > 1
+          ? `You busted on Hand ${activeHandIndex + 1} after Double Down! Game over.`
+          : "You busted on Double Down! Game over."
+      );
       setResult("lose");
       setLastWin(0);
     } else {
-      setMessage(`Doubled down on Hand ${activeHandIndex + 1}. Dealer’s turn.`);
+      setMessage(
+        newHands.length > 1
+          ? `Doubled down on Hand ${activeHandIndex + 1}. Dealer’s turn.`
+          : "You doubled down. Dealer’s turn."
+      );
       dealerTurn(newHands, dealerHand);
     }
   };
@@ -278,8 +285,7 @@ export default function BlackjackPage() {
       playerHands[activeHandIndex].length !== 2 ||
       playerHands[activeHandIndex][0].value !== playerHands[activeHandIndex][1].value ||
       balance < handBets[activeHandIndex]
-    )
-      return;
+    ) return;
 
     setBalance(balance - handBets[activeHandIndex]);
     let currentDeck = deck;
@@ -305,7 +311,7 @@ export default function BlackjackPage() {
 
     const newScores = newHands.map((hand) => calculateScore(hand));
     setPlayerScores(newScores);
-    setMessage(`Split Hand ${activeHandIndex + 1}. Playing Hand ${activeHandIndex + 1} now.`);
+    setMessage(`Split into two hands. Playing Hand ${activeHandIndex + 1} now.`);
   };
 
   const surrender = () => {
@@ -313,13 +319,12 @@ export default function BlackjackPage() {
       gameState !== GAME_STATE.PLAYER_TURN ||
       !playerHands[activeHandIndex] ||
       playerHands[activeHandIndex].length !== 2
-    )
-      return;
+    ) return;
     setGameState(GAME_STATE.GAME_OVER);
     setMessage(
-      `Surrendered Hand ${activeHandIndex + 1}. You get half your bet back (${Math.floor(
-        handBets[activeHandIndex] / 2
-      )} chips).`
+      playerHands.length > 1
+        ? `Surrendered Hand ${activeHandIndex + 1}. You get half your bet back (${Math.floor(handBets[activeHandIndex] / 2)} chips).`
+        : `You surrendered. You get half your bet back (${Math.floor(handBets[activeHandIndex] / 2)} chips).`
     );
     setBalance(balance + Math.floor(handBets[activeHandIndex] / 2));
     setResult("lose");
@@ -374,24 +379,25 @@ export default function BlackjackPage() {
       const pScore = calculateScore(hand);
       const isBlackjack = pScore === 21 && hand.length === 2;
       const dealerBlackjack = dScore === 21 && dHand.length === 2;
+      const handLabel = pHands.length > 1 ? `Hand ${index + 1}` : "You";
 
       if (pScore > 21) {
-        finalMessage += `Hand ${index + 1} busted (Score: ${pScore}). `;
+        finalMessage += `${handLabel} busted (Score: ${pScore}). `;
       } else if (dScore > 21) {
-        finalMessage += `Hand ${index + 1} wins! Dealer busted (Score: ${dScore}). `;
+        finalMessage += `${handLabel} wins! Dealer busted (Score: ${dScore}). `;
         totalWin += handBets[index] * 2;
       } else if (isBlackjack && !dealerBlackjack) {
-        finalMessage += `Hand ${index + 1} wins with Blackjack! `;
+        finalMessage += `${handLabel} wins with Blackjack! `;
         totalWin += Math.floor(handBets[index] * 2.5);
       } else if (!isBlackjack && dealerBlackjack) {
-        finalMessage += `Hand ${index + 1} loses to Dealer’s Blackjack. `;
+        finalMessage += `${handLabel} loses to Dealer’s Blackjack. `;
       } else if (pScore > dScore) {
-        finalMessage += `Hand ${index + 1} wins (${pScore} vs ${dScore})! `;
+        finalMessage += `${handLabel} wins (${pScore} vs ${dScore})! `;
         totalWin += handBets[index] * 2;
       } else if (pScore < dScore) {
-        finalMessage += `Hand ${index + 1} loses (${pScore} vs ${dScore}). `;
+        finalMessage += `${handLabel} loses (${pScore} vs ${dScore}). `;
       } else {
-        finalMessage += `Hand ${index + 1} pushes (${pScore} vs ${dScore}). +${handBets[index]} chips `;
+        finalMessage += `${handLabel} pushes (${pScore} vs ${dScore}). +${handBets[index]} chips `;
         totalWin += handBets[index];
       }
     });
@@ -410,19 +416,19 @@ export default function BlackjackPage() {
 
   const decreaseBet = () => {
     if (gameState !== GAME_STATE.BETTING && gameState !== GAME_STATE.GAME_OVER) return;
-    setBet(Math.max(bet - 100, 0)); // Allow bet to go below 100 for flexibility
+    setBet(Math.max(bet - 100, 0));
     setHandBets([Math.max(bet - 100, 0)]);
   };
 
   const handleBetInput = (e) => {
     if (gameState !== GAME_STATE.BETTING && gameState !== GAME_STATE.GAME_OVER) return;
     const value = Number(e.target.value);
-    setBet(isNaN(value) ? 0 : value); // Allow any input, default to 0 if invalid
+    setBet(isNaN(value) ? 0 : value);
     setHandBets([isNaN(value) ? 0 : value]);
   };
 
   const isBetValid = () => {
-    return bet > 0 && bet <= balance;
+    return bet >= 10 && bet <= balance;
   };
 
   const getCardDisplay = (card, isHidden = false) => {
@@ -452,16 +458,16 @@ export default function BlackjackPage() {
 
   const getMessageColor = () => {
     if (message.includes("wins") || message.includes("Blackjack")) {
-      return "bg-green-100 text-green-700"; // Green for wins
+      return "bg-green-100 text-green-700";
     } else if (
       message.includes("busted") ||
       message.includes("loses") ||
       message.includes("Surrendered") ||
       message.includes("Game over")
     ) {
-      return "bg-red-100 text-red-700"; // Red for losses or busts
+      return "bg-red-100 text-red-700";
     } else {
-      return "bg-blue-100 text-blue-700"; // Blue for all other messages
+      return "bg-blue-100 text-blue-700";
     }
   };
 
