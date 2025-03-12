@@ -111,8 +111,8 @@ export default function BlackjackPage() {
   };
 
   const startGame = () => {
-    if (bet > balance) {
-      setMessage("You don’t have enough chips to place this bet");
+    if (bet < 1 || bet > balance) {
+      setMessage("Bet must be between 0 and your current balance");
       return;
     }
 
@@ -376,15 +376,15 @@ export default function BlackjackPage() {
       const dealerBlackjack = dScore === 21 && dHand.length === 2;
 
       if (pScore > 21) {
-        finalMessage += `You busted (Score: ${pScore}). `;
+        finalMessage += `Hand ${index + 1} busted (Score: ${pScore}). `;
       } else if (dScore > 21) {
-        finalMessage += `You win! Dealer busted (Score: ${dScore}). `;
+        finalMessage += `Hand ${index + 1} wins! Dealer busted (Score: ${dScore}). `;
         totalWin += handBets[index] * 2;
       } else if (isBlackjack && !dealerBlackjack) {
-        finalMessage += `You win with 21! `;
+        finalMessage += `Hand ${index + 1} wins with Blackjack! `;
         totalWin += Math.floor(handBets[index] * 2.5);
       } else if (!isBlackjack && dealerBlackjack) {
-        finalMessage += `You lose to Dealer’s Blackjack. `;
+        finalMessage += `Hand ${index + 1} loses to Dealer’s Blackjack. `;
       } else if (pScore > dScore) {
         finalMessage += `Hand ${index + 1} wins (${pScore} vs ${dScore})! `;
         totalWin += handBets[index] * 2;
@@ -410,17 +410,19 @@ export default function BlackjackPage() {
 
   const decreaseBet = () => {
     if (gameState !== GAME_STATE.BETTING && gameState !== GAME_STATE.GAME_OVER) return;
-    setBet(Math.max(bet - 100, 100));
-    setHandBets([Math.max(bet - 100, 100)]);
+    setBet(Math.max(bet - 100, 0)); // Allow bet to go below 100 for flexibility
+    setHandBets([Math.max(bet - 100, 0)]);
   };
 
   const handleBetInput = (e) => {
     if (gameState !== GAME_STATE.BETTING && gameState !== GAME_STATE.GAME_OVER) return;
     const value = Number(e.target.value);
-    if (!isNaN(value) && value >= 100 && value <= balance) {
-      setBet(value);
-      setHandBets([value]);
-    }
+    setBet(isNaN(value) ? 0 : value); // Allow any input, default to 0 if invalid
+    setHandBets([isNaN(value) ? 0 : value]);
+  };
+
+  const isBetValid = () => {
+    return bet > 0 && bet <= balance;
   };
 
   const getCardDisplay = (card, isHidden = false) => {
@@ -449,14 +451,13 @@ export default function BlackjackPage() {
   };
 
   const getMessageColor = () => {
-    if (message.includes("wins") || message.includes("win")) {
+    if (message.includes("wins") || message.includes("Blackjack")) {
       return "bg-green-100 text-green-700"; // Green for wins
     } else if (
       message.includes("busted") ||
       message.includes("loses") ||
       message.includes("Surrendered") ||
-      message.includes("Game over") ||
-      message.includes("Blackjack")
+      message.includes("Game over")
     ) {
       return "bg-red-100 text-red-700"; // Red for losses or busts
     } else {
@@ -589,11 +590,11 @@ export default function BlackjackPage() {
                     </Button>
                     <input
                       type="number"
-                      value={bet}
+                      inputMode="numeric"
+                      value={bet || ""}
                       onChange={handleBetInput}
-                      min={100}
-                      max={balance}
-                      className="w-20 text-center text-xl font-medium border border-gray-300 rounded-md p-1"
+                      className="w-20 text-center text-xl font-medium border border-gray-300 rounded-md p-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      placeholder=""
                     />
                     <Button
                       variant="ghost"
@@ -608,7 +609,7 @@ export default function BlackjackPage() {
                   <Button
                     className="bg-blue-500 hover:bg-blue-600 w-full py-6 rounded-xl text-white font-medium"
                     onClick={startGame}
-                    disabled={bet > balance}
+                    disabled={!isBetValid()}
                   >
                     Deal Cards
                   </Button>
@@ -655,7 +656,7 @@ export default function BlackjackPage() {
                     onClick={doubleDown}
                     disabled={playerHands[activeHandIndex].length !== 2 || balance < handBets[activeHandIndex]}
                   >
-                    x2 Down
+                    2x Down
                   </Button>
                   <Button
                     className={`bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium min-w-[80px] ${
