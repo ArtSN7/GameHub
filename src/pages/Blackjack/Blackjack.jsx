@@ -376,15 +376,15 @@ export default function BlackjackPage() {
       const dealerBlackjack = dScore === 21 && dHand.length === 2;
 
       if (pScore > 21) {
-        finalMessage += `Hand ${index + 1} busted (Score: ${pScore}). `;
+        finalMessage += `You busted (Score: ${pScore}). `;
       } else if (dScore > 21) {
-        finalMessage += `Hand ${index + 1} wins! Dealer busted (Score: ${dScore}). `;
+        finalMessage += `You win! Dealer busted (Score: ${dScore}). `;
         totalWin += handBets[index] * 2;
       } else if (isBlackjack && !dealerBlackjack) {
-        finalMessage += `Hand ${index + 1} wins with Blackjack! `;
+        finalMessage += `You win with 21! `;
         totalWin += Math.floor(handBets[index] * 2.5);
       } else if (!isBlackjack && dealerBlackjack) {
-        finalMessage += `Hand ${index + 1} loses to Dealer’s Blackjack. `;
+        finalMessage += `You lose to Dealer’s Blackjack. `;
       } else if (pScore > dScore) {
         finalMessage += `Hand ${index + 1} wins (${pScore} vs ${dScore})! `;
         totalWin += handBets[index] * 2;
@@ -449,13 +449,14 @@ export default function BlackjackPage() {
   };
 
   const getMessageColor = () => {
-    if (message.includes("wins") || message.includes("Blackjack")) {
+    if (message.includes("wins") || message.includes("win")) {
       return "bg-green-100 text-green-700"; // Green for wins
     } else if (
       message.includes("busted") ||
       message.includes("loses") ||
       message.includes("Surrendered") ||
-      message.includes("Game over")
+      message.includes("Game over") ||
+      message.includes("Blackjack")
     ) {
       return "bg-red-100 text-red-700"; // Red for losses or busts
     } else {
