@@ -13,6 +13,7 @@
 
 import Home from '@/pages/HomePage/Home';
 import BlackjackPage from '@/pages/Blackjack/Blackjack';
+import ScratchTheCardPage from '@/pages/Scratch/Scratch';
 
 import ComingSoonPage from '@/pages/Additional/ComingSoon';
 import NotFoundPage from '@/pages/Additional/Error';
@@ -23,7 +24,7 @@ export const routes = [
   { path: '/games/blackjack', Component: BlackjackPage },
   { path: '/games/texas', Component: ComingSoonPage },
   { path: '/games/slots', Component: ComingSoonPage },
-  { path: '/games/scratch', Component: ComingSoonPage },
+  { path: '/games/scratch', Component: ScratchTheCardPage },
   { path: '/balance', Component: ComingSoonPage },
   { path: '/leaderboard', Component: ComingSoonPage },
   { path: '/bets', Component: ComingSoonPage },
