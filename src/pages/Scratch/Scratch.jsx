@@ -9,30 +9,30 @@ import { motion } from "framer-motion"
 
 // Game multipliers
 const MULTIPLIERS = {
-  LOW: { value: 1.0, rows: 5, cols: 5, bombs: 1 },
-  MEDIUM: { value: 1.5, rows: 6, cols: 6, bombs: 2 },
-  HIGH: { value: 2.0, rows: 7, cols: 7, bombs: 3 },
-}
-
-// Cell states
-const CELL_STATE = {
-  HIDDEN: "hidden",
-  REVEALED: "revealed",
-}
-
-// Cell types
-const CELL_TYPE = {
-  SAFE: "safe",
-  BOMB: "bomb",
-}
-
-// Game states
-const GAME_STATE = {
-  READY: "ready",
-  PLAYING: "playing",
-  WON: "won",
-  LOST: "lost",
-}
+    LOW: { value: 1.5, rows: 5, cols: 5, bombs: 1 },
+    MEDIUM: { value: 2.0, rows: 6, cols: 6, bombs: 2 },
+    HIGH: { value: 3.0, rows: 7, cols: 7, bombs: 3 },
+  }
+  
+  // Cell states
+  const CELL_STATE = {
+    HIDDEN: "hidden",
+    REVEALED: "revealed",
+  }
+  
+  // Cell types
+  const CELL_TYPE = {
+    SAFE: "safe",
+    BOMB: "bomb",
+  }
+  
+  // Game states
+  const GAME_STATE = {
+    READY: "ready",
+    PLAYING: "playing",
+    WON: "won",
+    LOST: "lost",
+  }
 
 export default function ScratchTheCardPage() {
   const [multiplier, setMultiplier] = useState(MULTIPLIERS.LOW)
@@ -45,23 +45,19 @@ export default function ScratchTheCardPage() {
   const [message, setMessage] = useState("Reveal cells without hitting bombs")
   const [potentialWin, setPotentialWin] = useState(0)
 
-  // Initialize game
   useEffect(() => {
     initializeGame()
   }, [multiplier])
 
-  // Calculate potential win
   useEffect(() => {
     setPotentialWin(Math.floor(bet * multiplier.value))
   }, [bet, multiplier])
 
-  // Initialize the game grid
   const initializeGame = () => {
     const { rows, cols, bombs } = multiplier
     const totalCells = rows * cols
     const bombPositions = []
 
-    // Generate random bomb positions
     while (bombPositions.length < bombs) {
       const pos = Math.floor(Math.random() * totalCells)
       if (!bombPositions.includes(pos)) {
@@ -69,7 +65,6 @@ export default function ScratchTheCardPage() {
       }
     }
 
-    // Create grid
     const newGrid = []
     for (let i = 0; i < rows; i++) {
       const row = []
@@ -92,25 +87,32 @@ export default function ScratchTheCardPage() {
     }
 
     setGrid(newGrid)
-    setGameState(GAME_STATE.READY)
     setRevealedCount(0)
     setSafeCount(totalCells - bombs)
     setMessage("Reveal cells without hitting bombs")
+    // Don't set gameState here, let the caller decide
   }
 
-  // Start a new game
   const startGame = () => {
     if (bet > balance) {
       setMessage("Insufficient balance")
-      return
+      return false
     }
 
-    setBalance(balance - bet)
+    setBalance(prev => prev - bet)
     setGameState(GAME_STATE.PLAYING)
     setMessage("Good luck!")
+    return true
   }
 
-  // Reveal a cell
+  // New combined function for Play Again
+  const playAgain = () => {
+    initializeGame()
+    if (startGame()) {
+      // Game successfully started
+    }
+  }
+
   const revealCell = (row, col) => {
     if (gameState !== GAME_STATE.PLAYING) return
     if (grid[row][col].state !== CELL_STATE.HIDDEN) return
@@ -120,30 +122,24 @@ export default function ScratchTheCardPage() {
     setGrid(newGrid)
 
     const cell = newGrid[row][col]
-    setRevealedCount(revealedCount + 1)
+    setRevealedCount(prev => prev + 1)
 
-    // Check cell type
     if (cell.type === CELL_TYPE.BOMB) {
-      // Game over - hit a bomb
       setGameState(GAME_STATE.LOST)
       setMessage("Boom! You hit a bomb.")
       revealAllBombs()
     }
 
-    // Check if all safe cells are revealed
     if (cell.type === CELL_TYPE.SAFE && revealedCount + 1 >= safeCount) {
-      // Win condition
       const winnings = Math.floor(bet * multiplier.value)
-      setBalance(balance + winnings)
+      setBalance(prev => prev + winnings)
       setGameState(GAME_STATE.WON)
       setMessage(`You win ${winnings}!`)
     }
   }
 
-  // Reveal all bombs when game is over
   const revealAllBombs = () => {
     const newGrid = [...grid]
-
     for (let i = 0; i < newGrid.length; i++) {
       for (let j = 0; j < newGrid[i].length; j++) {
         if (newGrid[i][j].type === CELL_TYPE.BOMB) {
@@ -151,40 +147,32 @@ export default function ScratchTheCardPage() {
         }
       }
     }
-
     setGrid(newGrid)
   }
 
-  // Change multiplier
   const changeMultiplier = (newMultiplier) => {
     if (gameState === GAME_STATE.PLAYING) return
     setMultiplier(newMultiplier)
   }
 
-  // Increase bet
   const increaseBet = () => {
     if (gameState === GAME_STATE.PLAYING) return
     setBet(Math.min(bet + 100, balance))
   }
 
-  // Decrease bet
   const decreaseBet = () => {
     if (gameState === GAME_STATE.PLAYING) return
     setBet(Math.max(bet - 100, 100))
   }
 
   const handleBetInput = (e) => {
-    if (gameState === GAME_STATE.PLAYING) return;
-    
-    const value = Number(e.target.value);
-    setBet(Math.max(0, Math.min(value, balance))); // Enforces minimum bet of 100
-  };
+    if (gameState === GAME_STATE.PLAYING) return
+    const value = Number(e.target.value)
+    setBet(Math.max(1, Math.min(value, balance)))
+  }
 
-  // Render a cell
   const renderCell = (cell) => {
     const { row, col, state, type } = cell
-
-    // Determine cell content based on state and type
     let content = null
     let cellClass = "w-full h-full flex items-center justify-center rounded-lg transition-all"
 
@@ -224,7 +212,6 @@ export default function ScratchTheCardPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333]">
-      {/* Header */}
       <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 shadow-sm">
         <div className="container flex items-center justify-between h-16 px-4">
           <Link to="/" className="flex items-center text-[#666666] hover:text-blue-500 transition-colors">
@@ -247,12 +234,10 @@ export default function ScratchTheCardPage() {
       </header>
 
       <main className="container px-4 py-8 max-w-md mx-auto">
-        {/* Game Title */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-[#333333]">Scratch The Card</h1>
         </div>
 
-        {/* Game Message */}
         {message && (
           <div className="flex justify-center mb-6">
             <motion.div
@@ -271,7 +256,6 @@ export default function ScratchTheCardPage() {
           </div>
         )}
 
-        {/* Multiplier Selection */}
         {gameState !== GAME_STATE.PLAYING && (
           <div className="mb-6">
             <div className="flex justify-center gap-2">
@@ -281,7 +265,7 @@ export default function ScratchTheCardPage() {
                 onClick={() => changeMultiplier(MULTIPLIERS.LOW)}
                 className={multiplier === MULTIPLIERS.LOW ? "bg-blue-500 hover:bg-blue-600" : ""}
               >
-                1.0x
+                1.5x
               </Button>
               <Button
                 variant={multiplier === MULTIPLIERS.MEDIUM ? "default" : "outline"}
@@ -289,7 +273,7 @@ export default function ScratchTheCardPage() {
                 onClick={() => changeMultiplier(MULTIPLIERS.MEDIUM)}
                 className={multiplier === MULTIPLIERS.MEDIUM ? "bg-blue-500 hover:bg-blue-600" : ""}
               >
-                1.5x
+                2.0x
               </Button>
               <Button
                 variant={multiplier === MULTIPLIERS.HIGH ? "default" : "outline"}
@@ -297,46 +281,43 @@ export default function ScratchTheCardPage() {
                 onClick={() => changeMultiplier(MULTIPLIERS.HIGH)}
                 className={multiplier === MULTIPLIERS.HIGH ? "bg-blue-500 hover:bg-blue-600" : ""}
               >
-                2.0x
+                3.0x
               </Button>
             </div>
           </div>
         )}
 
-        {/* Betting Controls */}
         {(gameState === GAME_STATE.READY || gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST) && (
           <div className="mb-6">
             <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto">
-                <div className="flex items-center justify-between w-full">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={decreaseBet}
-                      disabled={bet <= 100}
-                      className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={bet || ""}
-                      onChange={handleBetInput}
-                      className="w-20 text-center text-xl font-medium border border-gray-300 rounded-md p-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                      placeholder=""
-                      disabled={gameState === GAME_STATE.PLAYING}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={increaseBet}
-                      disabled={bet >= balance}
-                      className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
+              <div className="flex items-center justify-between w-full">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={decreaseBet}
+                  disabled={bet <= 100}
+                  className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={bet || ""}
+                  onChange={handleBetInput}
+                  className="w-20 text-center text-xl font-medium border border-gray-300 rounded-md p-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  disabled={gameState === GAME_STATE.PLAYING}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={increaseBet}
+                  disabled={bet >= balance}
+                  className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
               <div className="text-sm text-[#666666] text-center">
                 Potential win: <span className="font-medium text-[#333333]">{potentialWin}</span>
               </div>
@@ -344,7 +325,6 @@ export default function ScratchTheCardPage() {
           </div>
         )}
 
-        {/* Game Grid */}
         <div className="flex justify-center mb-8">
           <div className="bg-[#f1f5f9] p-2 rounded-xl shadow-sm">
             {grid.map((row, rowIndex) => (
@@ -355,7 +335,6 @@ export default function ScratchTheCardPage() {
           </div>
         </div>
 
-        {/* Game Controls */}
         <div className="flex justify-center">
           {gameState === GAME_STATE.READY && (
             <Button
@@ -366,11 +345,11 @@ export default function ScratchTheCardPage() {
               Start Game
             </Button>
           )}
-
           {(gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST) && (
             <Button
               className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
-              onClick={initializeGame}
+              onClick={playAgain}
+              disabled={bet > balance}
             >
               Play Again
             </Button>
@@ -380,4 +359,3 @@ export default function ScratchTheCardPage() {
     </div>
   )
 }
-
