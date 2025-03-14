@@ -12,7 +12,7 @@ export default defineConfig({
     // https://npmjs.com/package/@vitejs/plugin-react-swc
     react(),
     // Allows using self-signed certificates to run the dev server using HTTPS.
-    // https://www.npmjs.com/package/@vitejs/plugin-basic-ssl
+    //https://www.npmjs.com/package/@vitejs/plugin-basic-ssl
     basicSsl(),
   ],
   publicDir: './public',
