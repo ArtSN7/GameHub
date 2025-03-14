@@ -2,6 +2,8 @@
   "name": "telegram-mini-app-vite-react-javascript-tailwind",
   "private": true,
   "version": "0.0.1",
+  "description": "A Telegram Mini App template with Vite, React, JavaScript, and Tailwind CSS",
+  "type": "module",
   "scripts": {
     "start": "vite",
     "dev": "vite",
