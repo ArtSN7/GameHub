@@ -21,7 +21,7 @@ const SYMBOLS = [
 const WINNING_COMBINATIONS = {
   threeOfAKind: 5,
   threeFruits: 2,
-  threeHighValue: 3,
+  threeHighValue: 4,
 };
 
 // Game states
@@ -89,6 +89,8 @@ export default function SlotsPage() {
       return;
     }
 
+    setSpinningReels([]); // Clear spinning reels after animation
+
     spinInProgress.current = true;
     setBalance(balance - bet);
     setGameState(GAME_STATE.SPINNING);
@@ -132,8 +134,6 @@ export default function SlotsPage() {
 
       if (reelIndex === 2) {
         setReelSymbols(finalResult); // Set final result after all reels stop
-        setSpinningReels([]); // Clear spinning reels after animation
-        console.log("Final result set:", finalResult.map(reel => reel.map(s => s.icon)));
         setTimeout(() => {
           checkWin(finalResult);
           spinInProgress.current = false;
@@ -156,7 +156,7 @@ export default function SlotsPage() {
     let result = null;
 
     if (isThreeOfAKind) {
-      win = (payline[0].value * bet * WINNING_COMBINATIONS.threeOfAKind) + bet;
+      win = (payline[0].value * bet * WINNING_COMBINATIONS.threeOfAKind) / 10 + bet;
       resultMessage = `Three ${payline[0].icon}! You win ${win}!`;
       result = "threeOfAKind";
     } else if (isThreeFruits) {
@@ -164,7 +164,7 @@ export default function SlotsPage() {
       resultMessage = "Three fruits! You win!";
       result = "threeFruits";
     } else if (isThreeHighValue) {
-      win = (bet * WINNING_COMBINATIONS.threeHighValue) / 2 + bet;
+      win = (bet * WINNING_COMBINATIONS.threeHighValue) / 10 + bet;
       resultMessage = "Three high value symbols! You win!";
       result = "threeHighValue";
     }
