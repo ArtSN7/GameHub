@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Minus, Coins } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Coins, Eye, EyeOff } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 
 // Slot symbols with their values
@@ -44,6 +44,7 @@ export default function SlotsPage() {
   const [spinResult, setSpinResult] = useState(null);
   const [winAmount, setWinAmount] = useState(0);
   const [message, setMessage] = useState("Place your bet and spin");
+  const [showPayoutNotes, setShowPayoutNotes] = useState(false); 
 
   const reelControls = [useAnimation(), useAnimation(), useAnimation()];
   const spinInProgress = useRef(false);
@@ -205,6 +206,40 @@ export default function SlotsPage() {
     );
   };
 
+  // Toggle payout notes visibility
+  const togglePayoutNotes = () => {
+    setShowPayoutNotes(!showPayoutNotes);
+  };
+
+  // Payout notes component
+  const renderPayoutNotes = () => {
+    const fruitSymbols = SYMBOLS.filter(s => ["cherry", "lemon", "orange", "grape"].includes(s.id)).map(s => s.icon).join(", ");
+    const highValueSymbols = SYMBOLS.filter(s => ["seven", "bell", "bar", "diamond"].includes(s.id)).map(s => s.icon).join(", ");
+
+    return (
+      <div className="bg-[#f1f5f9] p-4 rounded-xl shadow-sm mt-4">
+        <h2 className="text-lg font-semibold text-[#333333] mb-2">Payout Information</h2>
+        <ul className="text-sm text-[#666666] space-y-2">
+          <li>
+            <strong>Three of a Kind (e.g., 🍒🍒🍒):</strong>
+            <br />
+            Example: Three 🍒 (value 2) with bet {bet} = {(2 * bet * WINNING_COMBINATIONS.threeOfAKind) + bet}.
+          </li>
+          <li>
+            <strong>Three Fruits ({fruitSymbols}):</strong> 
+            <br />
+            Example: 🍒🍋🍊 with bet {bet} = {(bet * WINNING_COMBINATIONS.threeFruits) / 10 + bet}.
+          </li>
+          <li>
+            <strong>Three High-Value Symbols ({highValueSymbols}):</strong> 
+            <br />
+            Example: 7️⃣🔔📊 with bet {bet} = {(bet * WINNING_COMBINATIONS.threeHighValue) / 2 + bet}.
+          </li>
+        </ul>
+      </div>
+    );
+  };
+
   // Handle bet input
   const handleBetInput = (e) => {
     if (gameState === GAME_STATE.SPINNING) return;
@@ -319,6 +354,22 @@ export default function SlotsPage() {
             {gameState === GAME_STATE.SPINNING ? "Spinning..." : "Spin"}
           </Button>
         </div>
+
+      {/* Toggle Button for Payout Notes */}
+      <div className="flex justify-center mb-6 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={togglePayoutNotes}
+            className="flex items-center gap-2 text-[#666666] hover:text-blue-500 hover:bg-blue-50"
+          >
+            {showPayoutNotes ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPayoutNotes ? "Hide Payouts" : "Show Payouts"}
+          </Button>
+        </div>
+
+      {/* Payout Notes Section */}
+      {showPayoutNotes && renderPayoutNotes()}
       </main>
     </div>
   );
