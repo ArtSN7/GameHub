@@ -18,8 +18,9 @@ export default defineConfig({
   publicDir: './public',
   server: {
     // Exposes your dev server and makes it accessible for the devices in the same network.
-    host: true,
-    port: 8000
+    host: false,
+    https: false,
+    port: 3000
   },
   resolve: {
     alias: {
