@@ -5,7 +5,7 @@
   "description": "A Telegram Mini App template with Vite, React, JavaScript, and Tailwind CSS",
   "type": "module",
   "scripts": {
-    "start": "vite",
+    "start": "node server.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
@@ -24,6 +24,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "eruda": "^3.0.1",
+    "express": "^4.21.2",
     "framer-motion": "^12.5.0",
     "lucide-react": "^0.479.0",
     "react": "^18.2.0",

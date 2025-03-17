@@ -88,7 +88,7 @@ function GameCard({ title, description, icon, color, bgImage, imageName, onPlay 
 
           <div className="relative mt-auto aspect-[16/9] rounded-lg overflow-hidden mb-4">
             <img
-              src={bgImage || "/placeholder.svg"}
+              src={bgImage}
               alt={title}
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />

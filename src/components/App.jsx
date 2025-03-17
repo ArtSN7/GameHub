@@ -3,25 +3,17 @@ import {
   bindMiniAppCSSVars,
   bindThemeParamsCSSVars,
   bindViewportCSSVars,
-  initNavigator, useLaunchParams,
+  initNavigator,
+  useLaunchParams,
   useMiniApp,
   useThemeParams,
   useViewport,
 } from '@telegram-apps/sdk-react';
 import { AppRoot } from '@telegram-apps/telegram-ui';
 import { useEffect, useMemo } from 'react';
-import {
-  Navigate,
-  Route,
-  Router,
-  Routes,
-} from 'react-router-dom';
-
+import { Navigate, Route, Router, Routes } from 'react-router-dom';
 import { routes } from '@/navigation/routes.jsx';
 
-/**
- * @return {JSX.Element}
- */
 export function App() {
   const lp = useLaunchParams();
   const miniApp = useMiniApp();
@@ -29,31 +21,52 @@ export function App() {
   const viewport = useViewport();
 
   useEffect(() => {
-    return bindMiniAppCSSVars(miniApp, themeParams);
+    // Ensure Telegram WebApp is ready
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      console.log('WebApp.ready() called');
+    } else {
+      console.warn('Telegram WebApp not available');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (miniApp && themeParams) {
+      return bindMiniAppCSSVars(miniApp, themeParams);
+    }
   }, [miniApp, themeParams]);
 
   useEffect(() => {
-    return bindThemeParamsCSSVars(themeParams);
+    if (themeParams) {
+      return bindThemeParamsCSSVars(themeParams);
+    }
   }, [themeParams]);
 
   useEffect(() => {
     if (viewport) {
       viewport.expand();
-      bindViewportCSSVars(viewport);
+      return bindViewportCSSVars(viewport);
     }
   }, [viewport]);
 
-  // Create a new application navigator and attach it to the browser history, so it could modify
-  // it and listen to its changes.
   const navigator = useMemo(() => initNavigator('app-navigation-state'), []);
   const [location, reactNavigator] = useIntegration(navigator);
 
-  // Don't forget to attach the navigator to allow it to control the BackButton state as well
-  // as browser history.
   useEffect(() => {
     navigator.attach();
     return () => navigator.detach();
   }, [navigator]);
+
+  useEffect(() => {
+    console.log('Launch Params:', lp);
+    if (!lp) {
+      console.warn('No launch parameters available');
+    }
+  }, [lp]);
+
+  if (!lp) {
+    return <div>Initializing Telegram Mini App...</div>;
+  }
 
   return (
     <AppRoot
@@ -63,9 +76,11 @@ export function App() {
       <Router location={location} navigator={reactNavigator}>
         <Routes>
           {routes.map((route) => <Route key={route.path} {...route} />)}
-          <Route path='*' element={<Navigate to='/'/>}/>
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
     </AppRoot>
   );
 }
+
+export default App;

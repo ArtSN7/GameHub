@@ -1,23 +1,16 @@
 import { mockTelegramEnv, parseInitData, retrieveLaunchParams } from '@telegram-apps/sdk-react';
 
-// It is important, to mock the environment only for development purposes. When building the
-// application, import.meta.env.DEV will become false, and the code inside will be tree-shaken,
-// so you will not see it in your final bundle.
-if (import.meta.env.DEV) {
-  let shouldMock;
+// Mock environment for development or when Telegram context is unavailable
+if (import.meta.env.DEV || typeof window.Telegram === 'undefined') {
+  let shouldMock = true;
 
-  // Try to extract launch parameters to check if the current environment is Telegram-based.
   try {
-    // If we are able to extract launch parameters, it means that we are already in the
-    // Telegram environment. So, there is no need to mock it.
+    // Attempt to retrieve launch parameters
     retrieveLaunchParams();
-
-    // We could previously mock the environment. In case we did, we should do it again. The reason
-    // is the page could be reloaded, and we should apply mock again, because mocking also
-    // enables modifying the window object.
+    // If successful but previously mocked, reapply mock (e.g., after reload)
     shouldMock = !!sessionStorage.getItem('____mocked');
   } catch (e) {
-    shouldMock = true;
+    shouldMock = true; // Mock if retrieval fails (e.g., outside Telegram)
   }
 
   if (shouldMock) {
