@@ -16,8 +16,8 @@ import BlackjackPage from '@/pages/Blackjack/Blackjack';
 import ScratchTheCardPage from '@/pages/Scratch/Scratch';
 import SlotsPage from '@/pages/Slots/Slots';
 
-import ComingSoonPage from '@/pages/Additional/ComingSoon';
-import NotFoundPage from '@/pages/Additional/Error';
+import ComingSoonPage from '@/pages/Utils/ComingSoon';
+import NotFoundPage from '@/pages/Utils/Error';
 
 
 export const routes = [

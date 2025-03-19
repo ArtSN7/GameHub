@@ -8,9 +8,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-console.log('Starting server initialization...');
-console.log('Current directory:', __dirname);
-console.log('Looking for dist folder at:', path.join(__dirname, 'dist'));
 
 // Check if dist exists
 const distPath = path.join(__dirname, 'dist', 'index.html');
@@ -43,7 +40,6 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-console.log('Starting Express server...');
 app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 }).on('error', (err) => {

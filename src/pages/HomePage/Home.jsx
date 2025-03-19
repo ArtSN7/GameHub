@@ -1,6 +1,6 @@
 // components of the main page
-import Header from "../Additional/Header"
-import Footer from "../Additional/Footer"
+import Header from "../Utils/Header"
+import Footer from "../Utils/Footer"
 import BalanceComponent from "./BalanceComponent"
 import GameOptions from "./GameOptions"
 

@@ -2,8 +2,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Minus, Coins, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Coins, Eye, EyeOff } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
+import BettingInput from "../Utils/BettingInput";
+
 
 // Slot symbols with their values
 const SYMBOLS = [
@@ -17,6 +19,7 @@ const SYMBOLS = [
   { id: "diamond", icon: "💎", value: 15 },
 ];
 
+
 // Winning combinations and multipliers
 const WINNING_COMBINATIONS = {
   threeOfAKind: 5,
@@ -24,12 +27,15 @@ const WINNING_COMBINATIONS = {
   threeHighValue: 4,
 };
 
+
 // Game states
-const GAME_STATE = {
+export const GAME_STATE = {
   READY: "ready",
   SPINNING: "spinning",
   RESULT: "result",
 };
+
+
 
 export default function SlotsPage() {
   const [balance, setBalance] = useState(1000);
@@ -56,17 +62,6 @@ export default function SlotsPage() {
     };
   }, []);
 
-  // Increase bet
-  const increaseBet = () => {
-    if (gameState === GAME_STATE.SPINNING) return;
-    setBet(Math.min(bet + 100, balance));
-  };
-
-  // Decrease bet
-  const decreaseBet = () => {
-    if (gameState === GAME_STATE.SPINNING) return;
-    setBet(Math.max(bet - 100, 100));
-  };
 
   // Get random symbol
   const getRandomSymbol = () => {
@@ -128,7 +123,7 @@ export default function SlotsPage() {
       await reelControls[reelIndex].start({
         y: -64 * (newSpinningReels[reelIndex].length - 3),
         transition: {
-          duration: 3 + reelIndex * 0.7,
+          duration: 2 + reelIndex * 0.7,
           ease: [0.25, 0.1, 0.25, 1],
         },
       });
@@ -171,6 +166,9 @@ export default function SlotsPage() {
     }
 
     setWinAmount(win);
+    if (win > 0) { // Add bet amount to balance if won ( win + bet ads to balance )
+      setWinAmount(win + bet);
+    }
     setMessage(resultMessage);
     setSpinResult(result);
     setGameState(GAME_STATE.RESULT);
@@ -240,12 +238,6 @@ export default function SlotsPage() {
     );
   };
 
-  // Handle bet input
-  const handleBetInput = (e) => {
-    if (gameState === GAME_STATE.SPINNING) return;
-    const value = Number(e.target.value);
-    setBet(Math.max(0, Math.min(value, balance)));
-  };
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333]">
@@ -312,39 +304,11 @@ export default function SlotsPage() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto">
-            <div className="flex items-center justify-between w-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={decreaseBet}
-                disabled={bet <= 100 || gameState === GAME_STATE.SPINNING}
-                className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={bet || ""}
-                onChange={handleBetInput}
-                className="w-20 text-center text-xl font-medium border border-gray-300 rounded-md p-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                disabled={gameState === GAME_STATE.SPINNING}
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={increaseBet}
-                disabled={bet >= balance || gameState === GAME_STATE.SPINNING}
-                className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        {/* Betting Input */}
+        <BettingInput bet={bet} setBet={setBet} balance={balance} gameState={gameState} />
 
+
+        {/* Spin Button */}
         <div className="flex justify-center gap-4">
           <Button
             className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
@@ -354,6 +318,7 @@ export default function SlotsPage() {
             {gameState === GAME_STATE.SPINNING ? "Spinning..." : "Spin"}
           </Button>
         </div>
+
 
       {/* Toggle Button for Payout Notes */}
       <div className="flex justify-center mb-6 mt-4">
@@ -366,10 +331,11 @@ export default function SlotsPage() {
             {showPayoutNotes ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {showPayoutNotes ? "Hide Payouts" : "Show Payouts"}
           </Button>
-        </div>
+      </div>
 
       {/* Payout Notes Section */}
       {showPayoutNotes && renderPayoutNotes()}
+
       </main>
     </div>
   );
