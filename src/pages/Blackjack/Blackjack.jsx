@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw, Plus, Minus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import BettingInput from "../Utils/BettingInput"
+
 
 const SUITS = ["♠", "♥", "♦", "♣"];
 const VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -437,25 +439,6 @@ export default function BlackjackPage() {
     setResult(totalWin > 0 ? "win" : "lose");
   };
 
-  const increaseBet = () => {
-    if (gameState !== GAME_STATE.BETTING && gameState !== GAME_STATE.GAME_OVER) return;
-    setBet(Math.min(bet + 100, balance));
-    setHandBets([Math.min(bet + 100, balance)]);
-  };
-
-  const decreaseBet = () => {
-    if (gameState !== GAME_STATE.BETTING && gameState !== GAME_STATE.GAME_OVER) return;
-    setBet(Math.max(bet - 100, 0));
-    setHandBets([Math.max(bet - 100, 0)]);
-  };
-
-  const handleBetInput = (e) => {
-    if (gameState !== GAME_STATE.BETTING && gameState !== GAME_STATE.GAME_OVER) return;
-    const value = Number(e.target.value);
-    setBet(isNaN(value) ? 0 : value);
-    setHandBets([isNaN(value) ? 0 : value]);
-  };
-
   const isBetValid = () => {
     return bet >= 10 && bet <= balance;
   };
@@ -620,34 +603,7 @@ export default function BlackjackPage() {
             <div className="flex flex-col items-center gap-6">
               {(gameState === GAME_STATE.BETTING || gameState === GAME_STATE.GAME_OVER) && (
                 <div className="flex flex-col items-center gap-4 w-full max-w-xs">
-                  <div className="flex items-center justify-between w-full">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={decreaseBet}
-                      disabled={bet <= 100}
-                      className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      value={bet || ""}
-                      onChange={handleBetInput}
-                      className="w-20 text-center text-xl font-medium border border-gray-300 rounded-md p-1 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                      placeholder=""
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={increaseBet}
-                      disabled={bet >= balance}
-                      className="h-10 w-10 rounded-full text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <BettingInput bet={bet} setBet={setBet} balance={balance} gameState={gameState} />
                   <Button
                     className="bg-blue-500 hover:bg-blue-600 w-full py-6 rounded-xl text-white font-medium"
                     onClick={startGame}

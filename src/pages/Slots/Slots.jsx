@@ -313,7 +313,7 @@ export default function SlotsPage() {
           <Button
             className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
             onClick={spin}
-            disabled={gameState === GAME_STATE.SPINNING || bet > balance}
+            disabled={gameState === GAME_STATE.SPINNING || bet > balance || bet <= 0}
           >
             {gameState === GAME_STATE.SPINNING ? "Spinning..." : "Spin"}
           </Button>

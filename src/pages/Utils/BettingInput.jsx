@@ -20,7 +20,7 @@ export default function BettingInput({ bet, setBet, balance, gameState }) {
     const handleBetInput = (e) => {
         if (gameState === GAME_STATE.SPINNING) return;
         const value = Number(e.target.value);
-        setBet(Math.max(1, Math.min(value, balance)));
+        setBet(Math.max(0, Math.min(value, balance)));
       };
 
     return (
