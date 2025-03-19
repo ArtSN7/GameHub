@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw, Plus, Minus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import BettingInput from "../Utils/BettingInput"
+import BlackJackBtns from "./BlackJackBtns";
 
 
 const SUITS = ["♠", "♥", "♦", "♣"];
@@ -67,7 +68,6 @@ export default function BlackjackPage() {
       const j = array[i] % (i + 1);
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    console.log("Deck shuffled (first 5 cards):", shuffled.slice(0, 5));
     return shuffled;
   };
 
@@ -132,8 +132,6 @@ export default function BlackjackPage() {
 
     setDeck(freshDeck);
 
-    console.log("Dealt cards - Player:", [playerCard1, playerCard2], "Dealer:", [dealerCard1, dealerCard2]);
-
     const newPlayerHand = [playerCard1, playerCard2];
     const newDealerHand = [dealerCard1, dealerCard2];
 
@@ -142,6 +140,7 @@ export default function BlackjackPage() {
     setActiveHandIndex(0);
     setDealerHand(newDealerHand);
     setHandBets([bet]);
+    setInsuranceBet(0);
 
     const newPlayerScore = calculateScore(newPlayerHand);
     const newDealerScore = calculateScore([dealerCard1]);
@@ -195,8 +194,6 @@ export default function BlackjackPage() {
     const card = currentDeck[0];
     currentDeck = currentDeck.slice(1);
     setDeck(currentDeck);
-
-    console.log("Dealt card in hit:", card);
 
     const newHands = [...playerHands];
     newHands[activeHandIndex] = [...newHands[activeHandIndex], card];
@@ -614,6 +611,7 @@ export default function BlackjackPage() {
                 </div>
               )}
 
+              {/* Insurance */}
               {gameState === GAME_STATE.INSURANCE && (
                 <div className="flex gap-3 justify-center w-full max-w-xs">
                   <Button
@@ -631,58 +629,11 @@ export default function BlackjackPage() {
                 </div>
               )}
 
+              {/* Show game buttons during player's turn */}
               {gameState === GAME_STATE.PLAYER_TURN && playerHands[activeHandIndex]?.length > 0 && (
-                <div className="flex flex-wrap gap-3 justify-center w-full max-w-md">
-                  <Button
-                    className="bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium min-w-[80px]"
-                    onClick={hit}
-                  >
-                    Hit
-                  </Button>
-                  <Button
-                    className="bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium min-w-[80px]"
-                    onClick={stand}
-                  >
-                    Stand
-                  </Button>
-                  <Button
-                    className={`bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium min-w-[80px] ${
-                      playerHands[activeHandIndex].length !== 2 || balance < handBets[activeHandIndex]
-                        ? "opacity-50"
-                        : ""
-                    }`}
-                    onClick={doubleDown}
-                    disabled={playerHands[activeHandIndex].length !== 2 || balance < handBets[activeHandIndex]}
-                  >
-                    2x Down
-                  </Button>
-                  <Button
-                    className={`bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium min-w-[80px] ${
-                      playerHands[activeHandIndex].length !== 2 ||
-                      playerHands[activeHandIndex][0].value !== playerHands[activeHandIndex][1].value ||
-                      balance < handBets[activeHandIndex]
-                        ? "opacity-50"
-                        : ""
-                    }`}
-                    onClick={split}
-                    disabled={
-                      playerHands[activeHandIndex].length !== 2 ||
-                      playerHands[activeHandIndex][0].value !== playerHands[activeHandIndex][1].value ||
-                      balance < handBets[activeHandIndex]
-                    }
-                  >
-                    Split
-                  </Button>
-                  <Button
-                    className={`bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium min-w-[80px] ${
-                      playerHands[activeHandIndex].length !== 2 ? "opacity-50" : ""
-                    }`}
-                    onClick={surrender}
-                    disabled={playerHands[activeHandIndex].length !== 2}
-                  >
-                    Surrender
-                  </Button>
-                </div>
+                <BlackJackBtns hit={hit} stand={stand} doubleDown={doubleDown}
+                split={split} surrender={surrender} playerHands={playerHands}
+                activeHandIndex={activeHandIndex} balance={balance} handBets={handBets} />
               )}
             </div>
           </div>
