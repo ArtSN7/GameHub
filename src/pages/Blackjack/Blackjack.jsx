@@ -444,23 +444,23 @@ export default function BlackjackPage() {
     if (!card) return null;
     if (isHidden) {
       return (
-        <div className="w-full h-full bg-blue-500 rounded-2xl flex items-center justify-center shadow-md">
-          <div className="text-white font-bold text-xl">?</div>
+        <div className="w-full h-full bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
+          <div className="text-white font-bold text-2xl md:text-3xl">?</div>
         </div>
       );
     }
     const isRed = card.suit === "♥" || card.suit === "♦";
     return (
       <div
-        className={`w-full h-full bg-white rounded-2xl flex flex-col justify-between p-3 shadow-md ${
+        className={`w-full h-full bg-white rounded-xl flex flex-col justify-between p-2 md:p-3 shadow-md ${
           isRed ? "text-red-500" : "text-black"
         }`}
       >
-        <div className="text-left text-sm font-medium">{card.value}</div>
+        <div className="text-left text-sm md:text-base font-medium">{card.value}</div>
         <div className="flex-grow flex items-center justify-center">
-          <div className="text-2xl">{card.suit}</div>
+          <div className="text-xl md:text-3xl">{card.suit}</div>
         </div>
-        <div className="text-right text-sm font-medium rotate-180">{card.value}</div>
+        <div className="text-right text-sm md:text-base font-medium rotate-180">{card.value}</div>
       </div>
     );
   };
@@ -468,28 +468,24 @@ export default function BlackjackPage() {
   const getMessageColor = () => {
     if (message.includes("wins") || message.includes("Blackjack") || message.includes("pushes")) {
       return "bg-green-100 text-green-700";
-    } else if (
-      message.includes("busted") ||
-      message.includes("loses") ||
-      message.includes("Surrendered") ||
-      message.includes("Game over")
-    ) {
+    } else if (message.includes("busted") || message.includes("loses") || message.includes("Surrendered")) {
       return "bg-red-100 text-red-700";
-    } else {
-      return "bg-blue-100 text-blue-700";
     }
+    return "bg-blue-100 text-blue-700";
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-[#333333]">
+    <div className="min-h-screen bg-[#fafafa] text-[#333333] flex flex-col">
       <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 shadow-sm">
         <div className="container flex items-center justify-between h-16 px-4">
           <Link to="/" className="flex items-center text-[#666666] hover:text-blue-500 transition-colors">
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span className="text-sm font-medium">Back</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <Badge className="bg-blue-500 hover:bg-blue-600 py-1.5 px-4 rounded-full">{balance}</Badge>
+          <div className="flex items-center gap-2 md:gap-4">
+            <Badge className="bg-blue-500 hover:bg-blue-600 py-1 px-3 md:py-1.5 md:px-4 rounded-full text-sm">
+              {balance}
+            </Badge>
             <Button
               variant="ghost"
               size="icon"
@@ -503,23 +499,26 @@ export default function BlackjackPage() {
         </div>
       </header>
 
-      <main className="container px-4 py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-[#333333]">Blackjack</h1>
+      <main className="flex-grow container px-4 py-6 md:py-8 mx-auto w-full">
+        <div className="text-center mb-6 md:mb-10">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#333333]">Blackjack</h1>
         </div>
 
-        <div className="space-y-12">
+        <div className="space-y-8 md:space-y-12">
+          {/* Dealer's Hand */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-[#666666]">Dealer’s Hand</h2>
-            </div>
+            <h2 className="text-base md:text-lg font-medium text-[#666666] mb-2 md:mb-4">
+              Dealer’s Hand
+            </h2>
             {dealerScore > 0 && gameState !== GAME_STATE.PLAYER_TURN && gameState !== GAME_STATE.INSURANCE && (
               <div className="text-center mb-2">
-                <span className="text-base font-medium text-[#666666]">Score: {dealerScore}</span>
+                <span className="text-sm md:text-base font-medium text-[#666666]">
+                  Score: {dealerScore}
+                </span>
               </div>
             )}
             <div className="flex justify-center">
-              <div className="flex gap-6">
+              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
                 <AnimatePresence>
                   {dealerHand.map((card, index) => (
                     <motion.div
@@ -528,7 +527,7 @@ export default function BlackjackPage() {
                       animate={{ opacity: 1, y: 0, rotateY: 0 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="w-20 h-28 shadow-md rounded-2xl overflow-hidden"
+                      className="w-16 h-24 md:w-20 md:h-28 shadow-md rounded-xl overflow-hidden"
                     >
                       {index === 1 && (gameState === GAME_STATE.PLAYER_TURN || gameState === GAME_STATE.INSURANCE)
                         ? getCardDisplay(card, true)
@@ -540,69 +539,72 @@ export default function BlackjackPage() {
             </div>
           </div>
 
+          {/* Message */}
           {message && (
             <div className="flex justify-center">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`py-2 px-6 rounded-full text-center text-base font-medium ${getMessageColor()}`}
+                className={`py-2 px-4 md:px-6 rounded-full text-center text-sm md:text-base font-medium ${getMessageColor()} max-w-full break-words`}
               >
                 {message}
                 {lastWin > 0 && result && result !== "lose" && (
-                  <span className="ml-2 font-semibold">+{lastWin} chips</span>
+                  <span className="ml-2 font-semibold">+{lastWin}</span>
                 )}
               </motion.div>
             </div>
           )}
 
+          {/* Player's Hands */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-[#666666]">Your Hands</h2>
-            </div>
-
-            <div className="flex justify-center mb-8">
-              <div className="flex flex-col gap-8 w-full max-w-3xl">
-                {playerHands.map((hand, handIndex) => (
+            <h2 className="text-base md:text-lg font-medium text-[#666666] mb-2 md:mb-4">
+              Your Hands
+            </h2>
+            <div className="flex justify-center mb-6 md:mb-8">
+              <div className="flex flex-col gap-6 md:gap-8 w-full">
+              {playerHands.map((hand, handIndex) => (
+                <div key={handIndex} className="flex flex-col items-center p-3 md:p-4">
                   <div
-                    key={handIndex}
-                    className={`flex flex-col items-center p-4 ${
-                      handIndex === activeHandIndex && gameState === GAME_STATE.PLAYER_TURN
-                        ? "border-2 border-blue-500 rounded-lg"
-                        : ""
+                    className={`inline-flex flex-col items-center ${
+                    handIndex === activeHandIndex && gameState === GAME_STATE.PLAYER_TURN
+                      ? "border-2 border-blue-100 rounded-lg p-3"
+                      : ""
                     }`}
                   >
-                    <div className="flex gap-6">
-                      <AnimatePresence>
-                        {hand.map((card, index) => (
-                          <motion.div
-                            key={`player-${handIndex}-${index}`}
-                            initial={{ opacity: 0, y: 20, rotateY: 180 }}
-                            animate={{ opacity: 1, y: 0, rotateY: 0 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.1 }}
-                            className="w-20 h-28 shadow-md rounded-2xl overflow-hidden"
-                          >
-                            {getCardDisplay(card)}
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                    {playerScores[handIndex] > 0 && (
-                      <span className="mt-2 text-base font-medium text-[#666666]">
-                        Score: {playerScores[handIndex]} (Bet: {handBets[handIndex]})
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center gap-6">
+                  <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+            <AnimatePresence>
+              {hand.map((card, index) => (
+                <motion.div
+                  key={`player-${handIndex}-${index}`}
+                  initial={{ opacity: 0, y: 20, rotateY: 180 }}
+                  animate={{ opacity: 1, y: 0, rotateY: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="w-16 h-24 md:w-20 md:h-28 shadow-md rounded-xl overflow-hidden"
+                >
+                  {getCardDisplay(card)}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+          {playerScores[handIndex] > 0 && (
+            <span className="mt-2 text-sm md:text-base font-medium text-[#666666]">
+              Score: {playerScores[handIndex]} (Bet: {handBets[handIndex]})
+            </span>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+            
+            {/* Controls */}
+            <div className="flex flex-col items-center gap-4 md:gap-6">
               {(gameState === GAME_STATE.BETTING || gameState === GAME_STATE.GAME_OVER) && (
-                <div className="flex flex-col items-center gap-4 w-full max-w-xs">
+                <div className="flex flex-col items-center gap-4 w-full max-w-sm">
                   <BettingInput bet={bet} setBet={setBet} balance={balance} gameState={gameState} />
                   <Button
-                    className="bg-blue-500 hover:bg-blue-600 w-full py-6 rounded-xl text-white font-medium"
+                    className="bg-blue-500 hover:bg-blue-600 w-full py-4 md:py-6 rounded-xl text-white font-medium text-base md:text-lg"
                     onClick={startGame}
                     disabled={!isBetValid()}
                   >
@@ -611,17 +613,16 @@ export default function BlackjackPage() {
                 </div>
               )}
 
-              {/* Insurance */}
               {gameState === GAME_STATE.INSURANCE && (
-                <div className="flex gap-3 justify-center w-full max-w-xs">
+                <div className="flex gap-3 justify-center w-full max-w-sm">
                   <Button
-                    className="bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium"
+                    className="bg-blue-500 hover:bg-blue-600 flex-1 py-4 md:py-6 rounded-xl text-white font-medium text-sm md:text-base"
                     onClick={() => handleInsurance(true)}
                   >
-                    Take Insurance
+                    Insurance
                   </Button>
                   <Button
-                    className="bg-blue-500 hover:bg-blue-600 flex-1 py-6 rounded-xl text-white font-medium"
+                    className="bg-blue-500 hover:bg-blue-600 flex-1 py-4 md:py-6 rounded-xl text-white font-medium text-sm md:text-base"
                     onClick={() => handleInsurance(false)}
                   >
                     No Insurance
@@ -629,11 +630,19 @@ export default function BlackjackPage() {
                 </div>
               )}
 
-              {/* Show game buttons during player's turn */}
               {gameState === GAME_STATE.PLAYER_TURN && playerHands[activeHandIndex]?.length > 0 && (
-                <BlackJackBtns hit={hit} stand={stand} doubleDown={doubleDown}
-                split={split} surrender={surrender} playerHands={playerHands}
-                activeHandIndex={activeHandIndex} balance={balance} handBets={handBets} />
+                <BlackJackBtns
+                  hit={hit}
+                  stand={stand}
+                  doubleDown={doubleDown}
+                  split={split}
+                  surrender={surrender}
+                  playerHands={playerHands}
+                  activeHandIndex={activeHandIndex}
+                  balance={balance}
+                  handBets={handBets}
+                  className="w-full max-w-sm"
+                />
               )}
             </div>
           </div>
