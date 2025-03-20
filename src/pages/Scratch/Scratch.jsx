@@ -34,6 +34,7 @@ const GAME_STATE = {
   PLAYING: "playing",
   WON: "won",
   LOST: "lost",
+  TOOK_LEAVE: "took_leave",
 }
 
 
@@ -231,6 +232,20 @@ export default function ScratchTheCardPage() {
     )
   }
 
+  const TakeLeaveFunction = () => {
+
+    setGameState(GAME_STATE.TOOK_LEAVE) // sets the game state to took leave
+
+    setMessage(`You left with ${money_for_reveal_cell}!`)
+
+    setBalance(prev => prev + money_for_reveal_cell) // update the balance
+
+    revealAllBombs() // reveal all the bombs
+
+    setMoneyForReveal(0) // reset the winning amount to 0
+  
+  }
+
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333]">
       <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 shadow-sm">
@@ -265,7 +280,7 @@ export default function ScratchTheCardPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`py-1.5 px-4 rounded-full text-center text-sm font-medium ${
-                gameState === GAME_STATE.WON
+                gameState === GAME_STATE.WON || gameState === GAME_STATE.TOOK_LEAVE
                   ? "bg-green-100 text-green-700"
                   : gameState === GAME_STATE.LOST
                     ? "bg-red-100 text-red-700"
@@ -330,8 +345,18 @@ export default function ScratchTheCardPage() {
             ))}
           </div>
         </div>
-
         <div className="flex justify-center">
+
+          {(gameState === GAME_STATE.PLAYING) && (
+            <Button
+              className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
+              onClick={TakeLeaveFunction}
+              disabled={money_for_reveal_cell == 0}
+            >
+              Take & Leave
+            </Button>
+          )}
+
           {gameState === GAME_STATE.READY && (
             <Button
               className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
@@ -341,7 +366,7 @@ export default function ScratchTheCardPage() {
               Start Game
             </Button>
           )}
-          {(gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST) && (
+          {(gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST || gameState === GAME_STATE.TOOK_LEAVE) && (
             <Button
               className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
               onClick={playAgain}
