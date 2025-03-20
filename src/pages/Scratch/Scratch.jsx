@@ -11,56 +11,70 @@ import BettingInput from "../Utils/BettingInput"
 
 // Game multipliers
 const MULTIPLIERS = {
-    LOW: { value: 1.5, rows: 5, cols: 5, bombs: 1 },
-    MEDIUM: { value: 2.0, rows: 6, cols: 6, bombs: 2 },
-    HIGH: { value: 3.0, rows: 7, cols: 7, bombs: 3 },
-  }
+    LOW: { value: 1.5, rows: 5, cols: 5, bombs: 2 },
+    MEDIUM: { value: 2, rows: 6, cols: 6, bombs: 3 },
+    HIGH: { value: 3.5, rows: 7, cols: 7, bombs: 4 },
+}
   
   // Cell states
-  const CELL_STATE = {
-    HIDDEN: "hidden",
-    REVEALED: "revealed",
-  }
+const CELL_STATE = {
+  HIDDEN: "hidden",
+  REVEALED: "revealed",
+}
   
   // Cell types
-  const CELL_TYPE = {
-    SAFE: "safe",
-    BOMB: "bomb",
-  }
+const CELL_TYPE = {
+  SAFE: "safe",
+  BOMB: "bomb",
+}
   
   // Game states
-  const GAME_STATE = {
-    READY: "ready",
-    PLAYING: "playing",
-    WON: "won",
-    LOST: "lost",
-  }
+const GAME_STATE = {
+  READY: "ready",
+  PLAYING: "playing",
+  WON: "won",
+  LOST: "lost",
+}
+
 
 export default function ScratchTheCardPage() {
-  const [multiplier, setMultiplier] = useState(MULTIPLIERS.LOW)
-  const [grid, setGrid] = useState([])
-  const [gameState, setGameState] = useState(GAME_STATE.READY)
-  const [balance, setBalance] = useState(1000)
-  const [bet, setBet] = useState(100)
-  const [revealedCount, setRevealedCount] = useState(0)
-  const [safeCount, setSafeCount] = useState(0)
-  const [message, setMessage] = useState("Reveal cells without hitting bombs")
-  const [potentialWin, setPotentialWin] = useState(0)
+  const [multiplier, setMultiplier] = useState(MULTIPLIERS.LOW) // type of game 
+  const [grid, setGrid] = useState([]) // grid of cells
 
-  useEffect(() => {
+  const [gameState, setGameState] = useState(GAME_STATE.READY)
+
+  const [balance, setBalance] = useState(1000) // balance of the user 
+  const [bet, setBet] = useState(100) // initial bet amount 
+
+  const [money_for_reveal_cell, setMoneyForReveal] = useState(0) // winning amount , adjusted every time user opens a cell without hitting a bomb
+
+
+  const [revealedCount, setRevealedCount] = useState(0) // number of cells revealed
+  const [safeCount, setSafeCount] = useState(0)
+  const [message, setMessage] = useState("Reveal cells without hitting bombs") // message which will be displayed to the user
+  const [potentialWin, setPotentialWin] = useState(0) // potential win amount if all of the safe cells are revealed
+
+
+  useEffect(() => { // when the multiplier changes, initialize the new grid 
     initializeGame()
   }, [multiplier])
 
-  useEffect(() => {
+  useEffect(() => { // when the bet or multiplier changes, update the potential win amount
     setPotentialWin(Math.floor(bet * multiplier.value))
   }, [bet, multiplier])
 
+  const changeMultiplier = (newMultiplier) => {
+    if (gameState === GAME_STATE.PLAYING) return
+    setMultiplier(newMultiplier)
+  }
+
+  // initialize the game grid
   const initializeGame = () => {
     const { rows, cols, bombs } = multiplier
     const totalCells = rows * cols
     const bombPositions = []
 
-    while (bombPositions.length < bombs) {
+    while (bombPositions.length < bombs) { // randomly generate bomb positions
       const pos = Math.floor(Math.random() * totalCells)
       if (!bombPositions.includes(pos)) {
         bombPositions.push(pos)
@@ -92,7 +106,6 @@ export default function ScratchTheCardPage() {
     setRevealedCount(0)
     setSafeCount(totalCells - bombs)
     setMessage("Reveal cells without hitting bombs")
-    // Don't set gameState here, let the caller decide
   }
 
   const startGame = () => {
@@ -107,16 +120,32 @@ export default function ScratchTheCardPage() {
     return true
   }
 
-  // New combined function for Play Again
   const playAgain = () => {
     initializeGame()
     if (startGame()) {
-      // Game successfully started
     }
   }
 
+    // reveal all the bombs when the game is lost
+  const revealAllBombs = () => {
+      const newGrid = [...grid]
+      for (let i = 0; i < newGrid.length; i++) {
+        for (let j = 0; j < newGrid[i].length; j++) {
+          if (newGrid[i][j].type === CELL_TYPE.BOMB) {
+            newGrid[i][j].state = CELL_STATE.REVEALED
+          }
+        }
+      }
+      setGrid(newGrid)
+  }
+
+  // reveal a cell and check if the game is won or lost
   const revealCell = (row, col) => {
-    if (gameState !== GAME_STATE.PLAYING) return
+
+    // if user is not playing nothing happens
+    if (gameState !== GAME_STATE.PLAYING) return 
+
+    // if the cell is already revealed, nothing happens
     if (grid[row][col].state !== CELL_STATE.HIDDEN) return
 
     const newGrid = [...grid]
@@ -126,37 +155,43 @@ export default function ScratchTheCardPage() {
     const cell = newGrid[row][col]
     setRevealedCount(prev => prev + 1)
 
-    if (cell.type === CELL_TYPE.BOMB) {
-      setGameState(GAME_STATE.LOST)
-      setMessage("Boom! You hit a bomb.")
-      revealAllBombs()
+    // if not all the cells were opened, then we pay user for another opened cell
+    if (cell.type === CELL_TYPE.SAFE && revealedCount + 1 < safeCount) {
+      const money_for_reveal = Math.floor(potentialWin / (multiplier.rows * multiplier.cols));
+
+      // Update the total winnings and get the new total
+      setMoneyForReveal((prev) => {
+        const newTotal = prev + money_for_reveal;
+        // Set the message with the current reveal amount and the new total
+        setMessage(`You got ${money_for_reveal} for reveal. You already won ${newTotal}`);
+        return newTotal;
+      });
+
+    console.log(money_for_reveal, moneyForReveal); // Log current reveal and state (before update)
     }
 
+    if (cell.type === CELL_TYPE.BOMB) { // if the cell is a bomb, the game is lost
+      setGameState(GAME_STATE.LOST)
+
+      setMoneyForReveal(0) // reset the winning amount to 0
+
+      setMessage("Boom! You lost all of the winnings!")
+      revealAllBombs()
+    }
+  
+    // if the user opened all the cells
     if (cell.type === CELL_TYPE.SAFE && revealedCount + 1 >= safeCount) {
       const winnings = Math.floor(bet * multiplier.value)
+
       setBalance(prev => prev + winnings)
+
       setGameState(GAME_STATE.WON)
       setMessage(`You win ${winnings}!`)
     }
+
   }
 
-  const revealAllBombs = () => {
-    const newGrid = [...grid]
-    for (let i = 0; i < newGrid.length; i++) {
-      for (let j = 0; j < newGrid[i].length; j++) {
-        if (newGrid[i][j].type === CELL_TYPE.BOMB) {
-          newGrid[i][j].state = CELL_STATE.REVEALED
-        }
-      }
-    }
-    setGrid(newGrid)
-  }
-
-  const changeMultiplier = (newMultiplier) => {
-    if (gameState === GAME_STATE.PLAYING) return
-    setMultiplier(newMultiplier)
-  }
-
+  // reveal a cell after it has been opened
   const renderCell = (cell) => {
     const { row, col, state, type } = cell
     let content = null
@@ -251,7 +286,7 @@ export default function ScratchTheCardPage() {
                 onClick={() => changeMultiplier(MULTIPLIERS.LOW)}
                 className={multiplier === MULTIPLIERS.LOW ? "bg-blue-500 hover:bg-blue-600" : ""}
               >
-                1.5x
+                {MULTIPLIERS.LOW.value}x
               </Button>
               <Button
                 variant={multiplier === MULTIPLIERS.MEDIUM ? "default" : "outline"}
@@ -259,7 +294,7 @@ export default function ScratchTheCardPage() {
                 onClick={() => changeMultiplier(MULTIPLIERS.MEDIUM)}
                 className={multiplier === MULTIPLIERS.MEDIUM ? "bg-blue-500 hover:bg-blue-600" : ""}
               >
-                2.0x
+                {MULTIPLIERS.MEDIUM.value}x
               </Button>
               <Button
                 variant={multiplier === MULTIPLIERS.HIGH ? "default" : "outline"}
@@ -267,7 +302,7 @@ export default function ScratchTheCardPage() {
                 onClick={() => changeMultiplier(MULTIPLIERS.HIGH)}
                 className={multiplier === MULTIPLIERS.HIGH ? "bg-blue-500 hover:bg-blue-600" : ""}
               >
-                3.0x
+                {MULTIPLIERS.HIGH.value}x
               </Button>
             </div>
           </div>
