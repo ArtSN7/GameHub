@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, RefreshCw, Plus, Minus } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import BettingInput from "../Utils/BettingInput";
 import BlackJackBtns from "./BlackJackBtns";
@@ -56,15 +56,25 @@ export default function BlackjackPage() {
         }
       }
     }
-    return shuffleDeck(newDeck);
+    // Verify deck integrity
+    const aceCounts = SUITS.map(suit => ({
+      suit,
+      count: newDeck.filter(card => card.value === "A" && card.suit === suit).length
+    }));
+    console.log("Ace counts in new deck:", aceCounts); // Should be 6 for each suit
+    const shuffledDeck = shuffleDeck(newDeck);
+    const shuffledAceCounts = SUITS.map(suit => ({
+      suit,
+      count: shuffledDeck.filter(card => card.value === "A" && card.suit === suit).length
+    }));
+    console.log("Ace counts after shuffle:", shuffledAceCounts); // Should still be 6 for each suit
+    return shuffledDeck;
   };
 
   const shuffleDeck = (deck) => {
     const shuffled = [...deck];
-    const array = new Uint32Array(shuffled.length);
-    crypto.getRandomValues(array);
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = array[i] % (i + 1);
+      const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
@@ -117,21 +127,19 @@ export default function BlackjackPage() {
       return;
     }
 
-    setBalance(balance - bet);
+    setBalance((prev) => prev - bet);
 
-    let currentDeck = deck;
-    if (currentDeck.length < 4) {
-      currentDeck = createDeck();
-      setDeck(currentDeck);
+    let localDeck = [...deck];
+    if (localDeck.length < 26) {
+      localDeck = createDeck();
+      console.log("Deck reshuffled at start of game");
     }
 
-    const playerCard1 = currentDeck[0];
-    const dealerCard1 = currentDeck[1];
-    const playerCard2 = currentDeck[2];
-    const dealerCard2 = currentDeck[3];
-    currentDeck = currentDeck.slice(4);
-
-    setDeck(currentDeck);
+    const playerCard1 = localDeck[0];
+    const dealerCard1 = localDeck[1];
+    const playerCard2 = localDeck[2];
+    const dealerCard2 = localDeck[3];
+    localDeck = localDeck.slice(4);
 
     const newPlayerHand = [playerCard1, playerCard2];
     const newDealerHand = [dealerCard1, dealerCard2];
@@ -150,6 +158,8 @@ export default function BlackjackPage() {
 
     setLastWin(0);
     setResult(null);
+
+    setDeck(localDeck); // Update deck state at the end
 
     const playerHasBlackjack = newPlayerScore === 21 && newPlayerHand.length === 2;
 
@@ -172,7 +182,7 @@ export default function BlackjackPage() {
         setMessage("Not enough chips for insurance. Continuing without it.");
       } else {
         setInsuranceBet(insuranceAmount);
-        setBalance(balance - insuranceAmount);
+        setBalance((prev) => prev - insuranceAmount);
       }
     }
 
@@ -189,14 +199,14 @@ export default function BlackjackPage() {
   const hit = () => {
     if (gameState !== GAME_STATE.PLAYER_TURN || !playerHands[activeHandIndex]) return;
 
-    let currentDeck = deck;
-    if (currentDeck.length < 10) {
-      currentDeck = createDeck();
-      setDeck(currentDeck);
+    let localDeck = [...deck];
+    if (localDeck.length < 26) {
+      localDeck = createDeck();
+      console.log("Deck reshuffled during hit");
     }
-    const card = currentDeck[0];
-    currentDeck = currentDeck.slice(1);
-    setDeck(currentDeck);
+
+    const card = localDeck[0];
+    localDeck = localDeck.slice(1);
 
     const newHands = [...playerHands];
     newHands[activeHandIndex] = [...newHands[activeHandIndex], card];
@@ -206,6 +216,8 @@ export default function BlackjackPage() {
     const newScores = [...playerScores];
     newScores[activeHandIndex] = newScore;
     setPlayerScores(newScores);
+
+    setDeck(localDeck); // Update deck state at the end
 
     if (newScore > 21) {
       if (activeHandIndex < newHands.length - 1) {
@@ -224,17 +236,7 @@ export default function BlackjackPage() {
   const stand = () => {
     if (gameState !== GAME_STATE.PLAYER_TURN || !playerHands[activeHandIndex]) return;
 
-    const currentScore = calculateScore(playerHands[activeHandIndex]);
-    if (currentScore === 21) {
-      if (activeHandIndex < playerHands.length - 1) {
-        setActiveHandIndex(activeHandIndex + 1);
-        setMessage(`Hand ${activeHandIndex + 1} reached 21. Playing Hand ${activeHandIndex + 2} now.`);
-      } else {
-        setGameState(GAME_STATE.GAME_OVER);
-        setMessage("You reached 21! Game over.");
-        determineWinner(playerHands, dealerHand);
-      }
-    } else if (activeHandIndex < playerHands.length - 1) {
+    if (activeHandIndex < playerHands.length - 1) {
       setActiveHandIndex(activeHandIndex + 1);
       setMessage(`Standing on Hand ${activeHandIndex + 1}. Playing Hand ${activeHandIndex + 2} now.`);
     } else {
@@ -253,24 +255,19 @@ export default function BlackjackPage() {
     ) return;
 
     const doubleAmount = handBets[activeHandIndex];
-    if (balance < doubleAmount) {
-      setMessage("Not enough chips to double down.");
-      return;
-    }
-
-    setBalance(balance - doubleAmount);
+    setBalance((prev) => prev - doubleAmount);
     const newHandBets = [...handBets];
     newHandBets[activeHandIndex] *= 2;
     setHandBets(newHandBets);
 
-    let currentDeck = deck;
-    if (currentDeck.length < 10) {
-      currentDeck = createDeck();
-      setDeck(currentDeck);
+    let localDeck = [...deck];
+    if (localDeck.length < 26) {
+      localDeck = createDeck();
+      console.log("Deck reshuffled during double down");
     }
-    const card = currentDeck[0];
-    currentDeck = currentDeck.slice(1);
-    setDeck(currentDeck);
+
+    const card = localDeck[0];
+    localDeck = localDeck.slice(1);
 
     const newHands = [...playerHands];
     newHands[activeHandIndex] = [...newHands[activeHandIndex], card];
@@ -281,24 +278,15 @@ export default function BlackjackPage() {
     newScores[activeHandIndex] = newScore;
     setPlayerScores(newScores);
 
-    if (newScore > 21) {
-      if (activeHandIndex < newHands.length - 1) {
-        setActiveHandIndex(activeHandIndex + 1);
-        setMessage(`Hand ${activeHandIndex + 1} busted after Double Down. Playing Hand ${activeHandIndex + 2} now.`);
-      } else {
-        setGameState(GAME_STATE.DEALER_TURN);
-        setMessage("All hands complete. Dealer’s turn.");
-        dealerTurn(newHands, dealerHand);
-      }
+    setDeck(localDeck); // Update deck state at the end
+
+    if (activeHandIndex < newHands.length - 1) {
+      setActiveHandIndex(activeHandIndex + 1);
+      setMessage(`Doubled down on Hand ${activeHandIndex + 1}. Playing Hand ${activeHandIndex + 2} now.`);
     } else {
-      if (activeHandIndex < newHands.length - 1) {
-        setActiveHandIndex(activeHandIndex + 1);
-        setMessage(`Doubled down on Hand ${activeHandIndex + 1}. Playing Hand ${activeHandIndex + 2} now.`);
-      } else {
-        setGameState(GAME_STATE.DEALER_TURN);
-        setMessage("All hands complete. Dealer’s turn.");
-        dealerTurn(newHands, dealerHand);
-      }
+      setGameState(GAME_STATE.DEALER_TURN);
+      setMessage("All hands complete. Dealer’s turn.");
+      dealerTurn(newHands, dealerHand);
     }
   };
 
@@ -316,20 +304,18 @@ export default function BlackjackPage() {
 
     setBalance((prev) => prev - handBets[activeHandIndex]);
 
-    let currentDeck = deck;
-    if (currentDeck.length < 2) {
-      currentDeck = createDeck();
-      setDeck(currentDeck);
+    let localDeck = [...deck];
+    if (localDeck.length < 26) {
+      localDeck = createDeck();
+      console.log("Deck reshuffled during split");
     }
 
-    const card1 = currentDeck[0];
-    const card2 = currentDeck[1];
-    currentDeck = currentDeck.slice(2);
-    setDeck(currentDeck);
+    const card1 = localDeck[0];
+    const card2 = localDeck[1];
+    localDeck = localDeck.slice(2);
 
     const newHands = [...playerHands];
     const currentHand = newHands[activeHandIndex];
-    const isAceSplit = currentHand[0].value === "A";
     newHands[activeHandIndex] = [currentHand[0], card1];
     newHands.push([currentHand[1], card2]);
     setPlayerHands(newHands);
@@ -340,27 +326,9 @@ export default function BlackjackPage() {
     const newScores = newHands.map((hand) => calculateScore(hand));
     setPlayerScores(newScores);
 
-    if (isAceSplit) {
-      if (activeHandIndex < newHands.length - 1) {
-        setActiveHandIndex(activeHandIndex + 1);
-        setMessage(`Split Aces: Hand ${activeHandIndex + 1} complete. Playing Hand ${activeHandIndex + 2}.`);
-      } else {
-        setGameState(GAME_STATE.DEALER_TURN);
-        setMessage("All hands complete after splitting Aces. Dealer’s turn.");
-        dealerTurn(newHands, dealerHand);
-      }
-    } else if (newScores[activeHandIndex] === 21) {
-      if (activeHandIndex < newHands.length - 1) {
-        setActiveHandIndex(activeHandIndex + 1);
-        setMessage(`Hand ${activeHandIndex + 1} got 21! Playing Hand ${activeHandIndex + 2} now.`);
-      } else {
-        setGameState(GAME_STATE.GAME_OVER);
-        setMessage("All hands reached 21! Game over.");
-        determineWinner(newHands, dealerHand);
-      }
-    } else {
-      setMessage(`Split into ${newHands.length} hands. Playing Hand ${activeHandIndex + 1} now.`);
-    }
+    setDeck(localDeck); // Update deck state at the end
+
+    setMessage(`Split into ${newHands.length} hands. Playing Hand ${activeHandIndex + 1} now.`);
   };
 
   const surrender = () => {
@@ -370,12 +338,13 @@ export default function BlackjackPage() {
       playerHands[activeHandIndex].length !== 2
     ) return;
     setGameState(GAME_STATE.GAME_OVER);
+    const refund = Math.floor(handBets[activeHandIndex] / 2);
+    setBalance((prev) => prev + refund);
     setMessage(
       playerHands.length > 1
-        ? `Surrendered Hand ${activeHandIndex + 1}. You get half your bet back (${Math.floor(handBets[activeHandIndex] / 2)} chips).`
-        : `You surrendered. You get half your bet back (${Math.floor(handBets[activeHandIndex] / 2)} chips).`
+        ? `Surrendered Hand ${activeHandIndex + 1}. Refunded ${refund} chips.`
+        : `You surrendered. Refunded ${refund} chips.`
     );
-    setBalance(balance + Math.floor(handBets[activeHandIndex] / 2));
     setResult("lose");
     setLastWin(0);
   };
@@ -385,27 +354,35 @@ export default function BlackjackPage() {
     setMessage("Dealer is playing...");
     let currentDealerHand = [...dHand];
     let currentDealerScore = calculateScore(currentDealerHand);
-    setDealerHand(currentDealerHand);
-    setDealerScore(currentDealerScore);
+    let localDeck = [...deck]; // Use a local copy of the deck to avoid state update issues
 
     const dealerPlay = () => {
       if (currentDealerScore < 17 || (currentDealerScore === 17 && isSoftSeventeen(currentDealerHand))) {
-        let currentDeck = deck;
-        if (currentDeck.length < 10) {
-          currentDeck = createDeck();
-          setDeck(currentDeck);
+        if (localDeck.length < 26) {
+          localDeck = createDeck();
+          console.log("Deck reshuffled during dealer turn");
         }
-        const card = currentDeck[0];
-        currentDeck = currentDeck.slice(1);
-        setDeck(currentDeck);
+
+        if (localDeck.length === 0) {
+          console.error("Deck is empty! Forcing a reshuffle.");
+          localDeck = createDeck();
+        }
+
+        const card = localDeck[0];
+        console.log(`Dealer draws: ${card.value}${card.suit}`); // Debug log
+        localDeck = localDeck.slice(1); // Update local deck
 
         currentDealerHand = [...currentDealerHand, card];
         currentDealerScore = calculateScore(currentDealerHand);
+
         setDealerHand(currentDealerHand);
         setDealerScore(currentDealerScore);
 
         setTimeout(dealerPlay, 600);
       } else {
+        setDeck(localDeck);
+        setDealerHand(currentDealerHand);
+        setDealerScore(currentDealerScore);
         determineWinner(pHands, currentDealerHand);
       }
     };
@@ -417,11 +394,17 @@ export default function BlackjackPage() {
     setGameState(GAME_STATE.GAME_OVER);
     const dScore = calculateScore(dHand);
     let totalWin = 0;
-    let finalMessage = "";
+    let totalLoss = 0;
+    let finalMessage = [];
 
-    if (insuranceBet > 0 && dScore === 21 && dHand.length === 2) {
-      totalWin += insuranceBet * 2;
-      finalMessage += `Insurance paid out ${insuranceBet * 2} chips. `;
+    if (insuranceBet > 0) {
+      if (dScore === 21 && dHand.length === 2) {
+        totalWin += insuranceBet * 2;
+        finalMessage.push(`Insurance paid out ${insuranceBet * 2} chips.`);
+      } else {
+        totalLoss += insuranceBet;
+        finalMessage.push(`Insurance lost (${insuranceBet} chips).`);
+      }
     }
 
     pHands.forEach((hand, index) => {
@@ -429,38 +412,42 @@ export default function BlackjackPage() {
       const isBlackjack = pScore === 21 && hand.length === 2;
       const dealerBlackjack = dScore === 21 && dHand.length === 2;
       const handLabel = pHands.length > 1 ? `Hand ${index + 1}` : "You";
+      const betAmount = handBets[index];
 
       if (pScore > 21) {
-        finalMessage += `${handLabel} busted. `;
+        finalMessage.push(`${handLabel} busted.`);
+        totalLoss += betAmount;
       } else if (dScore > 21) {
-        finalMessage += `${handLabel} wins! Dealer busted. `;
-        totalWin += handBets[index] * 2;
+        finalMessage.push(`${handLabel} wins! Dealer busted.`);
+        totalWin += betAmount * 2;
       } else if (isBlackjack && !dealerBlackjack) {
-        finalMessage += `${handLabel} wins with Blackjack! `;
-        totalWin += Math.floor(handBets[index] * 2.5); // 3:2 payout for blackjack
+        const blackjackPayout = Math.floor(betAmount * 2.5);
+        finalMessage.push(`${handLabel} wins with Blackjack!`);
+        totalWin += blackjackPayout;
       } else if (!isBlackjack && dealerBlackjack) {
-        finalMessage += `${handLabel} loses to Dealer’s Blackjack. `;
+        finalMessage.push(`${handLabel} loses to Dealer’s Blackjack .`);
+        totalLoss += betAmount;
       } else if (pScore > dScore) {
-        finalMessage += `${handLabel} wins! `;
-        totalWin += handBets[index] * 2;
+        finalMessage.push(`${handLabel} wins!`);
+        totalWin += betAmount * 2;
       } else if (pScore < dScore) {
-        finalMessage += `${handLabel} loses. `;
+        finalMessage.push(`${handLabel} loses.`);
+        totalLoss += betAmount;
       } else {
-        finalMessage += `${handLabel} pushes. `;
-        totalWin += handBets[index];
+        finalMessage.push(`${handLabel} pushes.`);
+        totalWin += betAmount;
       }
     });
 
-    setBalance((prev) => prev + totalWin);
-    setMessage(finalMessage.trim());
-    setLastWin(totalWin);
-    setResult(totalWin > 0 ? "win" : "lose");
+    const netResult = totalWin - totalLoss;
+    setBalance((prev) => prev + netResult);
+    setMessage(finalMessage.join(" "));
+    setLastWin(netResult);
+    setResult(netResult > 0 ? "win" : netResult < 0 ? "lose" : "push");
     setDealerScore(dScore);
   };
 
-  const isBetValid = () => {
-    return bet >= 10 && bet <= balance;
-  };
+  const isBetValid = () => bet >= 10 && bet <= balance;
 
   const getCardDisplay = (card, isHidden = false) => {
     if (!card) return null;
@@ -488,11 +475,8 @@ export default function BlackjackPage() {
   };
 
   const getMessageColor = () => {
-    if (message.includes("wins") || message.includes("Blackjack") || message.includes("pushes")) {
-      return "bg-green-100 text-green-700";
-    } else if (message.includes("busted") || message.includes("loses") || message.includes("Surrendered")) {
-      return "bg-red-100 text-red-700";
-    }
+    if (result === "win") return "bg-green-100 text-green-700";
+    if (result === "lose") return "bg-red-100 text-red-700";
     return "bg-blue-100 text-blue-700";
   };
 
@@ -527,7 +511,6 @@ export default function BlackjackPage() {
         </div>
 
         <div className="space-y-8 md:space-y-12">
-          {/* Dealer's Hand */}
           <div>
             {dealerScore > 0 && gameState !== GAME_STATE.PLAYER_TURN && gameState !== GAME_STATE.INSURANCE && (
               <div className="text-center mb-2">
@@ -558,7 +541,6 @@ export default function BlackjackPage() {
             </div>
           </div>
 
-          {/* Message */}
           {message && (
             <div className="flex justify-center">
               <motion.div
@@ -567,14 +549,13 @@ export default function BlackjackPage() {
                 className={`py-2 px-4 md:px-6 rounded-full text-center text-sm md:text-base font-medium ${getMessageColor()} max-w-full break-words`}
               >
                 {message}
-                {lastWin > 0 && result && result !== "lose" && (
-                  <span className="ml-2 font-semibold">+{lastWin}</span>
+                {lastWin !== 0 && (
+                  <span className="ml-2 font-semibold">{lastWin > 0 ? `+${lastWin}` : lastWin}</span>
                 )}
               </motion.div>
             </div>
           )}
 
-          {/* Player's Hands */}
           <div>
             <div className="flex justify-center mb-6 md:mb-8">
               <div className="flex flex-col gap-6 md:gap-8 w-full">
@@ -614,7 +595,6 @@ export default function BlackjackPage() {
               </div>
             </div>
 
-            {/* Controls */}
             <div className="flex flex-col items-center gap-4 md:gap-6">
               {(gameState === GAME_STATE.BETTING || gameState === GAME_STATE.GAME_OVER) && (
                 <div className="flex flex-col items-center gap-4 w-full max-w-sm">
