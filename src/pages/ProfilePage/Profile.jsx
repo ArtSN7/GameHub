@@ -11,17 +11,23 @@ import { ArrowLeft, Trophy, Star, Clock, Coins, Gift, Edit, Save, Check, AlertCi
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+import { useUser } from './../../components/App'; // Adjust path if needed
+
 export default function ProfilePage() {
+
+
+    const { user, setUser } = useUser();
+
   const [coins, setCoins] = useState(24680)
   const [editMode, setEditMode] = useState(false)
   const [userData, setUserData] = useState({
-    username: "Player123",
-    email: "player123@example.com",
+    username: user.username,
+    email: user.first_name + " " + user.last_name,
     memberSince: "January 2023",
     level: 12,
     rating: 4.8,
     hoursPlayed: 120,
-    profileImage: "/placeholder.svg?height=120&width=120",
+    profileImage: user.photoUrl,
   })
   const [promocode, setPromocode] = useState("")
   const [promocodeStatus, setPromocodeStatus] = useState(null)
@@ -107,7 +113,7 @@ export default function ProfilePage() {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <div className="relative">
                 <img
-                  src={userData.profileImage || "/placeholder.svg"}
+                  src={userData.profileImage}
                   alt="Profile"
                   width={120}
                   height={120}
