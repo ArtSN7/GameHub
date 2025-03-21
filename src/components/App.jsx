@@ -71,28 +71,12 @@ export function App() {
     return <div>Initializing Telegram Mini App...</div>;
   }
 
-  const isInTelegram = lp && lp.initData && lp.initData.user;
-
-  const defaultUser = {
-    id: -1,
-    firstName: '',
-    lastName: '',
-    username: '',
-    photoUrl: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Anon',
-  };
-
   // Store user in state
-  const [user, setUser] = useState(lp.initData.user || defaultUser);
+  const [user, setUser] = useState(lp.initData.user);
 
   useEffect(() => {
-    setUser(lp.initData.user || defaultUser);
+    setUser(lp.initData.user);
   }, [lp]);
-
-
-
-  if (!isInTelegram){
-    setUser(defaultUser);
-  }
 
 
   return (

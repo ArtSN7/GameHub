@@ -1,4 +1,5 @@
 import { mockTelegramEnv, parseInitData, retrieveLaunchParams } from '@telegram-apps/sdk-react';
+import { picture } from 'framer-motion/client';
 
 // Mock environment for development or when Telegram context is unavailable
 if (import.meta.env.DEV || typeof window.Telegram === 'undefined') {
@@ -23,6 +24,7 @@ if (import.meta.env.DEV || typeof window.Telegram === 'undefined') {
         language_code: 'en',
         is_premium: true,
         allows_write_to_pm: true,
+        photo_url: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Andrew'
       })],
       ['hash', '89d6079ad6762351f38c6dbbc41bb53048019256a9443988af7a48bcad16ba31'],
       ['auth_date', '1716922846'],
