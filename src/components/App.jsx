@@ -10,9 +10,14 @@ import {
   useViewport,
 } from '@telegram-apps/sdk-react';
 import { AppRoot } from '@telegram-apps/telegram-ui';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, createContext, useState, useContext } from 'react';
 import { Navigate, Route, Router, Routes } from 'react-router-dom';
 import { routes } from '@/navigation/routes.jsx';
+
+
+// Create a User Context
+const UserContext = createContext();
+
 
 export function App() {
   const lp = useLaunchParams();
@@ -24,7 +29,6 @@ export function App() {
     // Ensure Telegram WebApp is ready
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.ready();
-      console.log('WebApp.ready() called');
     } else {
       console.warn('Telegram WebApp not available');
     }
@@ -58,7 +62,6 @@ export function App() {
   }, [navigator]);
 
   useEffect(() => {
-    console.log('Launch Params:', lp);
     if (!lp) {
       console.warn('No launch parameters available');
     }
@@ -68,19 +71,50 @@ export function App() {
     return <div>Initializing Telegram Mini App...</div>;
   }
 
+  const isInTelegram = lp && lp.initData && lp.initData.user;
+
+  const defaultUser = {
+    id: -1,
+    firstName: '',
+    lastName: '',
+    username: '',
+    photoUrl: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Anon',
+  };
+
+  // Store user in state
+  const [user, setUser] = useState(lp.initData.user || defaultUser);
+
+  useEffect(() => {
+    setUser(lp.initData.user || defaultUser);
+  }, [lp]);
+
+
+
+  if (!isInTelegram){
+    setUser(defaultUser);
+  }
+
+
   return (
-    <AppRoot
-      appearance={miniApp.isDark ? 'dark' : 'light'}
-      platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
-    >
-      <Router location={location} navigator={reactNavigator}>
-        <Routes>
-          {routes.map((route) => <Route key={route.path} {...route} />)}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </AppRoot>
+    <UserContext.Provider value={{ user, setUser }}>
+      <AppRoot
+        appearance={lp.miniApp?.isDark ? 'dark' : 'light'}
+        platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
+      >
+        <Router location={location} navigator={reactNavigator}>
+          <Routes>
+            {routes.map((route) => (
+              <Route key={route.path} {...route} />
+            ))}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+      </AppRoot>
+    </UserContext.Provider>
   );
 }
+
+// Custom hook to access user data anywhere
+export const useUser = () => useContext(UserContext);
 
 export default App;

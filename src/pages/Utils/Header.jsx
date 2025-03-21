@@ -1,9 +1,13 @@
 import { Link }from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Menu, Spade } from "lucide-react"
+import { useUser } from './../../components/App'; // Adjust path if needed
 
 
 export default function Header() {
+
+  const { user, setUser } = useUser();
+
     return(
       <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/70 border-b border-[#e2e8f0]">
       <div className="container flex items-center justify-between h-16 px-4">
@@ -29,7 +33,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <Link to="/profile" className="relative"> {/* Changed href to to for react-router-dom */}
               <img
-                  src="/placeholder.svg?height=40&width=40"
+                  src={`${user.photoUrl}?height=40&width=40`}
                   alt="Profile"
                   width={40}
                   height={40}
