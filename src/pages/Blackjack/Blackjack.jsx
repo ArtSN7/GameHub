@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import BettingInput from "../Utils/BettingInput";
 import BlackJackBtns from "./BlackJackBtns";
 
+import InGameHeader from "../Utils/InGameHeader";
+
 const SUITS = ["♠", "♥", "♦", "♣"];
 const VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 const SUIT_COLORS = {
@@ -480,30 +482,47 @@ export default function BlackjackPage() {
     return "bg-blue-100 text-blue-700";
   };
 
+  const BlackJackDescription = (
+    <>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Objective</h3>
+        <p className="text-xs text-[#64748b]">
+          Beat the dealer by getting a hand value closer to 21 without going over. Cards 2-10 are worth their face value, J/Q/K are worth 10, and Aces are worth 1 or 11.
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Rules</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Game uses 6 decks, reshuffled when fewer than 26 cards remain.</li>
+          <li>Dealer must hit on 16 or soft 17 (Ace + 6), and stand on hard 17 or higher.</li>
+          <li>You start with 2 cards; dealer shows one card initially.</li>
+          <li>Options: Hit (take another card), Stand (end turn), Double Down (double bet, take one card), Split (split pairs into two hands), Surrender (forfeit half bet).</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Payouts</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Standard Win: 1:1 (bet returned + equal amount won).</li>
+          <li>Blackjack (Ace + 10/J/Q/K): 3:2 (bet returned + 1.5x bet won).</li>
+          <li>Push (tie with dealer): Bet returned, no win/loss.</li>
+          <li>Insurance: 2:1 if dealer has Blackjack (offered when dealer shows Ace; costs half your bet).</li>
+          <li>Surrender: Lose half your bet, end hand immediately.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Special Cases</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Split: Available when your first two cards are a pair; each new hand gets its own bet equal to the original.</li>
+          <li>Double Down: Only on your first two cards if balance allows; doubles your bet and you get one more card.</li>
+          <li>Bust: Going over 21 loses the hand automatically.</li>
+        </ul>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333] flex flex-col">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 shadow-sm">
-        <div className="container flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center text-[#666666] hover:text-blue-500 transition-colors">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            <span className="text-sm font-medium">Back</span>
-          </Link>
-          <div className="flex items-center gap-2 md:gap-4">
-            <Badge className="bg-blue-500 hover:bg-blue-600 py-1 px-3 md:py-1.5 md:px-4 rounded-full text-sm">
-              {balance}
-            </Badge>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={initializeGame}
-              title="New Game"
-              className="text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <InGameHeader coins={balance} IsShowGuide={true} title={"BlackJack Rules"} description={BlackJackDescription} />
 
       <main className="flex-grow container px-4 py-6 md:py-8 mx-auto w-full">
         <div className="text-center mb-6 md:mb-10">

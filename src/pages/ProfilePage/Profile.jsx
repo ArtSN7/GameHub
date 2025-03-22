@@ -11,12 +11,13 @@ import { ArrowLeft, Trophy, Star, Clock, Coins, Gift, Edit, Save, Check, AlertCi
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
+import Footer from "../Utils/Footer"
+import InGameHeader from "../Utils/InGameHeader"
+
 import { useUser } from './../../components/App'; // Adjust path if needed
 
 export default function ProfilePage() {
-
-
-    const { user, setUser } = useUser();
+  const { user, setUser } = useUser();
 
   const [coins, setCoins] = useState(24680)
   const [editMode, setEditMode] = useState(false)
@@ -93,18 +94,9 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-[#0f172a]">
       {/* Header */}
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/70 border-b border-[#e2e8f0]">
-        <div className="container flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center text-[#64748b] hover:text-blue-500 transition-colors">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            <span className="text-sm font-medium">Back to Games</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Coins className="h-4 w-4 text-yellow-500" />
-            <span className="font-medium">{coins.toLocaleString()}</span>
-          </div>
-        </div>
-      </header>
+      <InGameHeader coins={coins} IsShowGuide={false} />
+
+      {/* Main Content */}
 
       <main className="container px-4 py-8 max-w-4xl mx-auto">
         {/* Profile Header */}
@@ -494,22 +486,7 @@ export default function ProfilePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#e2e8f0] py-6 mt-16 bg-white">
-        <div className="container px-4 text-center">
-          <div className="flex justify-center gap-4 mb-4">
-            <Link href="/terms" className="text-sm text-[#64748b] hover:text-blue-500 transition-colors">
-              Terms
-            </Link>
-            <Link href="/privacy" className="text-sm text-[#64748b] hover:text-blue-500 transition-colors">
-              Privacy
-            </Link>
-            <Link href="/support" className="text-sm text-[#64748b] hover:text-blue-500 transition-colors">
-              Support
-            </Link>
-          </div>
-          <p className="text-sm text-[#64748b]">© {new Date().getFullYear()} GameHub. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
