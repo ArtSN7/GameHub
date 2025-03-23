@@ -19,7 +19,7 @@ export default function InGameHeader({ coins, IsShowGuide, title, description })
             <div className="container flex items-center justify-between h-16 px-4">
                 <Link to="/" className="flex items-center text-[#64748b] hover:text-blue-500 transition-colors">
                     <ArrowLeft className="h-5 w-5 mr-2" />
-                    <span className="text-sm font-medium">Back to Games</span>
+                    <span className="text-sm font-medium">Main</span>
                 </Link>
 
                 <div className="flex items-center gap-4">
