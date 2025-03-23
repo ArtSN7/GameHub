@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Coins, Eye, EyeOff } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 import BettingInput from "../Utils/BettingInput";
+import InGameHeader from "../Utils/InGameHeader";
 
 
 // Slot symbols with their values
@@ -238,20 +239,46 @@ export default function SlotsPage() {
     );
   };
 
+  // description of slots game
+  const SlotsDescription = (
+    <>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Objective</h3>
+        <p className="text-xs text-[#64748b]">
+          Spin the reels to align symbols on the payline (middle row) for a chance to win based on symbol combinations.
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Rules</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Three reels spin with 8 possible symbols: 🍒(2), 🍋(3), 🍊(4), 🍇(5), 7️⃣(10), 🔔(8), 📊(7), 💎(15).</li>
+          <li>Place a bet and spin; winnings depend on the middle row (payline) result.</li>
+          <li>No bonus rounds or free spins; each spin is independent.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Payouts</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Three of a Kind (e.g., 🍒🍒🍒): (Symbol Value × Bet × 5) / 10 + Bet (e.g., 🍒 at 100 bet = 2 × 100 × 5 / 10 + 100 = 200).</li>
+          <li>Three Fruits (🍒, 🍋, 🍊, 🍇 mix): (Bet × 2) / 10 + Bet (e.g., 100 bet = 20 + 100 = 120).</li>
+          <li>Three High-Value (7️⃣, 🔔, 📊, 💎 mix): (Bet × 4) / 10 + Bet (e.g., 100 bet = 40 + 100 = 140).</li>
+          <li>No win: Lose your bet.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Special Notes</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Payline: Only the middle row counts for wins.</li>
+          <li>Symbol Values: Higher-value symbols (e.g., 💎 at 15) yield bigger wins for three of a kind.</li>
+        </ul>
+      </div>
+    </>
+  );
+
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333]">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 shadow-sm">
-        <div className="container flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center text-[#666666] hover:text-blue-500 transition-colors">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            <span className="text-sm font-medium">Back</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Badge className="bg-blue-500 hover:bg-blue-600 py-1.5 px-4 rounded-full">{balance}</Badge>
-          </div>
-        </div>
-      </header>
+      <InGameHeader coins={balance} IsShowGuide={true} title={"Slots Rules"} description={SlotsDescription} />
 
       <main className="container px-4 py-8 max-w-md mx-auto">
         <div className="text-center mb-8">

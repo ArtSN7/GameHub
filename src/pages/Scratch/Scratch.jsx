@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, RefreshCw, Bomb, Plus, Minus, Diamond } from "lucide-react"
 import { motion } from "framer-motion"
 import BettingInput from "../Utils/BettingInput"
+import InGameHeader from "../Utils/InGameHeader"
 
 
 // Game multipliers
@@ -246,28 +247,46 @@ export default function ScratchTheCardPage() {
   
   }
 
+  // description of the game
+  const ScratchTheCardDescription = (
+    <>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Objective</h3>
+        <p className="text-xs text-[#64748b]">
+          Reveal safe cells in a grid to earn winnings while avoiding bombs. Cash out anytime with "Take & Leave" or aim for the full payout by revealing all safe cells.
+        </p>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Rules</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Choose a multiplier: Low (1.5x, 5x5, 2 bombs), Medium (2x, 6x6, 3 bombs), or High (3.5x, 7x7, 4 bombs).</li>
+          <li>Place a bet and start revealing cells one by one.</li>
+          <li>Bombs end the game, losing your bet and winnings unless you cash out early.</li>
+          <li>Safe cells incrementally increase your winnings; reveal all safe cells to win the full multiplier amount.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Payouts</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Each safe cell revealed: ~Bet × Multiplier / Total Cells (e.g., 1.5x on 5x5 = ~Bet/16.67 per cell).</li>
+          <li>Full win (all safe cells): Bet × Multiplier (e.g., 100 bet at 1.5x = 150).</li>
+          <li>Take & Leave: Keep accumulated winnings from revealed safe cells.</li>
+          <li>Hit a bomb: Lose bet and all winnings if not cashed out.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Special Features</h3>
+        <ul className="text-xs text-[#64748b] space-y-2">
+          <li>Take & Leave: Cash out at any time with current winnings (resets to 0 after).</li>
+          <li>Multiplier Selection: Higher multipliers increase grid size and bomb count, raising risk and reward.</li>
+        </ul>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333]">
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-white/80 shadow-sm">
-        <div className="container flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center text-[#666666] hover:text-blue-500 transition-colors">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            <span className="text-sm font-medium">Back</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Badge className="bg-blue-500 hover:bg-blue-600 py-1.5 px-4 rounded-full">{balance}</Badge>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={initializeGame}
-              title="New Game"
-              className="text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+      <InGameHeader coins={balance} IsShowGuide={true} title={"Scratch Rules"} description={ScratchTheCardDescription} />
 
       <main className="container px-4 py-8 max-w-md mx-auto">
         <div className="text-center mb-8">
