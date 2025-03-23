@@ -15,6 +15,8 @@ import Home from '@/pages/HomePage/Home';
 import BlackjackPage from '@/pages/Blackjack/Blackjack';
 import ScratchTheCardPage from '@/pages/Scratch/Scratch';
 import SlotsPage from '@/pages/Slots/Slots';
+import Plinko from '@/pages/Plinko/Plinko';
+
 import ProfilePage from '@/pages/ProfilePage/Profile';
 
 import TermsPage from '@/pages/TermsAndConditions/Terms';
@@ -32,6 +34,7 @@ export const routes = [
   { path: '/games/texas', Component: ComingSoonPage },
   { path: '/games/slots', Component: SlotsPage },
   { path: '/games/scratch', Component: ScratchTheCardPage },
+  { path: '/games/plinko', Component: Plinko },
 
   { path: '/balance', Component: ComingSoonPage },
   { path: '/leaderboard', Component: ComingSoonPage },

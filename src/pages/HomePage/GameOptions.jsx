@@ -1,7 +1,7 @@
 import { useNavigate }from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Spade, Coins, Bomb } from "lucide-react"
+import { Spade, Coins, Bomb, LoaderPinwheel} from "lucide-react"
 
 import blackjackImage from "../../components/images/blackjack.jpg";
 import scratchImage from "../../components/images/scratch.jpg";
@@ -28,6 +28,11 @@ export default function GameOptions() {
   const playScratchTheCard = () => {
     navigate('/games/scratch');
   };
+
+  const playPlinko = () => {
+    navigate('/games/plinko');
+  };
+  
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -66,6 +71,15 @@ export default function GameOptions() {
         bgImage={scratchImage}
         imageName="minesweeper.jpg"
         onPlay={playScratchTheCard} // Pass the function as a prop
+      />
+      <GameCard
+        title="Plinko"
+        description="Drop the ball and enjoy"
+        icon={<LoaderPinwheel className="h-5 w-5" />}
+        color="#3b82f6"
+        bgImage={blackjackImage}
+        imageName="blackjack.jpg"
+        onPlay={playPlinko} // Pass the function as a prop
       />
     </div>
   );
