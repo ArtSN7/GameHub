@@ -60,7 +60,6 @@ export function Game() {
   const [gameState, setGameState] = useState("IDLE");
   const [message, setMessage] = useState("");
   const [winAmount, setWinAmount] = useState(0);
-  const [showPayoutNotes, setShowPayoutNotes] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: WIDTH, height: HEIGHT });
 
   useEffect(() => {
@@ -148,24 +147,6 @@ export function Game() {
     ballManagerRef.current.addBall(startX);
   };
 
-  const togglePayoutNotes = () => {
-    setShowPayoutNotes((prev) => !prev);
-  };
-
-  const renderPayoutNotes = () => (
-    <div className="bg-[#f1f5f9] p-4 rounded-xl shadow-sm">
-      <h3 className="text-sm font-medium mb-2 text-[#333333]">Payouts</h3>
-      <ul className="text-xs text-[#666666] space-y-2">
-        <li>1000x: Sinks 1, 17</li>
-        <li>130x: Sinks 2, 16</li>
-        <li>26x: Sinks 3, 15</li>
-        <li>9x: Sinks 4, 14</li>
-        <li>4x: Sinks 5, 13</li>
-        <li>2x: Sinks 6, 12</li>
-        <li>0.2x: Sinks 7–11</li>
-      </ul>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333] flex flex-col">
@@ -221,19 +202,6 @@ export function Game() {
           </Button>
         </div>
 
-        <div className="flex justify-center mt-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={togglePayoutNotes}
-            className="flex items-center gap-2 text-[#666666] hover:text-blue-500 hover:bg-blue-50"
-          >
-            {showPayoutNotes ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            {showPayoutNotes ? "Hide Payouts" : "Show Payouts"}
-          </Button>
-        </div>
-
-        {showPayoutNotes && renderPayoutNotes()}
       </main>
     </div>
   );
