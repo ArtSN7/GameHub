@@ -10,6 +10,8 @@ import InGameHeader from "../../../Utils/InGameHeader";
 import BettingInput from "../../../Utils/BettingInput";
 import { Button } from "@/components/ui/button";
 
+import { WIDTH, HEIGHT } from "../game/constants";
+
 const PlinkoDescription = (
   <>
     <div>
@@ -56,7 +58,7 @@ export function Game() {
   const [message, setMessage] = useState("");
   const [winAmount, setWinAmount] = useState(0);
   const [showPayoutNotes, setShowPayoutNotes] = useState(false);
-  const [canvasSize, setCanvasSize] = useState({ width: 600, height: 600 });
+  const [canvasSize, setCanvasSize] = useState({ width: WIDTH, height: HEIGHT });
 
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -133,9 +135,10 @@ export function Game() {
     setMessage("Dropping...");
     setWinAmount(0);
 
+    // from what point i drop the ball
     const response = calc_function();
-    const minX = 364;
-    const maxX = 436;
+    const minX = 370;
+    const maxX = 430;
     const range = maxX - minX;
     const normalizedX = minX + Math.floor((response.point % range) || 0);
     const startX = pad(normalizedX);

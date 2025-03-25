@@ -35,6 +35,7 @@ export const createObstacles = (): Obstacle[] => {
     const rowStartX = (WIDTH - rowWidth) / 2; // Center each row
     for (let col = 0; col < numObstacles; col++) {
       const x = rowStartX + col * spacing;
+
       obstacles.push({ x: pad(x), y: pad(y), radius: obstacleRadius });
     }
   }
