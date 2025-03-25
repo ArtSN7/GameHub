@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 
 import { WIDTH, HEIGHT } from "../game/constants";
 
+
+
 const PlinkoDescription = (
   <>
     <div>
@@ -45,6 +47,7 @@ const PlinkoDescription = (
     </div>
   </>
 );
+
 
 export function Game() {
   const ballManagerRef = useRef(null);

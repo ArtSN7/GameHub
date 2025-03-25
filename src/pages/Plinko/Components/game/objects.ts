@@ -44,10 +44,10 @@ export const createObstacles = (): Obstacle[] => {
 
 export const createSinks = (): Sink[] => {
   const sinks = [];
-  const gridWidth = 544; // 17 sinks * 32px
+  const gridWidth = 590; // 17 sinks * 32px
   const startX = (WIDTH - gridWidth) / 2; // Center the sinks under the grid
   const sinkWidthAdjusted = gridWidth / NUM_SINKS; // Should be 32px
-  const y = HEIGHT - 40; // Position sinks at the bottom
+  const y = HEIGHT - 90; // Position sinks at the bottom
 
   for (let i = 0; i < NUM_SINKS; i++) {
     const x = startX + sinkWidthAdjusted * i;
