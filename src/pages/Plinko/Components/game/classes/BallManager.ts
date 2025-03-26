@@ -70,11 +70,13 @@ export class BallManager {
 
   getColor(index: number) {
     const multiplier = this.sinks[index]?.multiplier || 0;
-    if (multiplier >= 1000) return { background: "#dc2626", color: "white" };
-    if (multiplier >= 130) return { background: "#ef4444", color: "white" };
-    if (multiplier >= 26) return { background: "#f97316", color: "white" };
-    if (multiplier >= 9) return { background: "#fb923c", color: "white" };
-    if (multiplier >= 2) return { background: "#facc15", color: "black" };
+    if (multiplier >= 16) return { background: "#b91c1c", color: "white" };    // Deep red
+    if (multiplier >= 9) return { background: "#dc2626", color: "white" };     // Bright red
+    if (multiplier >= 2) return { background: "#ea580c", color: "white" };     // Vibrant orange
+    if (multiplier >= 1.4) return { background: "#f97316", color: "white" };   // Warm orange
+    if (multiplier >= 1.2) return { background: "#fbbf24", color: "black" };   // Amber
+    if (multiplier >= 1.1) return { background: "#fcd34d", color: "black" };   // Soft yellow
+    if (multiplier >= 1) return { background: "#fef08a", color: "black" };     // Light yellow
     return { background: "#e2e8f0", color: "#333333" };
   }
 

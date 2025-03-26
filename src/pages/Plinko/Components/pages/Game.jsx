@@ -68,7 +68,7 @@ export function Game() {
       if (!container) return;
       const maxWidth = Math.min(container.clientWidth, window.innerHeight * 0.8); // Limit height to 80% of viewport
       const size = Math.max(300, Math.min(maxWidth, 600)); // Min 300px, max 600px
-      setCanvasSize({ width: size, height: size });
+      setCanvasSize({ width: size, height: size - 80 });
     };
 
     updateCanvasSize();
