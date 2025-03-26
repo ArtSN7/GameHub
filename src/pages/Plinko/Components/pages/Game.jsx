@@ -5,13 +5,11 @@ import { BallManager } from "../game/classes/BallManager";
 import calc_function from "../game/calculate_pattern";
 import { pad } from "../game/padding";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Coins } from "lucide-react";
 import InGameHeader from "../../../Utils/InGameHeader";
 import BettingInput from "../../../Utils/BettingInput";
 import { Button } from "@/components/ui/button";
 
 import { WIDTH, HEIGHT } from "../game/constants";
-
 
 
 const PlinkoDescription = (
@@ -26,23 +24,9 @@ const PlinkoDescription = (
       <h3 className="text-sm font-medium mb-2">Rules</h3>
       <ul className="text-xs text-[#64748b] space-y-2">
         <li>Place a bet and drop a ball; it bounces off pegs to a sink.</li>
-        <li>Sinks have multipliers from 0.2x to 1000x.</li>
-        <li>Payout: Bet × Multiplier (e.g., 100 bet on 2x = 200).</li>
+        <li>Sinks have multipliers from 0.5x to 16x.</li>
+        <li>Payout: Bet × Multiplier (e.g., 100 bet on 1x = 100).</li>
         <li>Each drop is independent; no bonus rounds.</li>
-      </ul>
-    </div>
-    <div>
-      <h3 className="text-sm font-medium mb-2">Payouts</h3>
-      <ul className="text-xs text-[#64748b] space-y-2">
-        <li>Win: Bet × Multiplier (e.g., 100 bet on 1000x = 100,000).</li>
-        <li>Loss: Bet lost if multiplier 1x (e.g., 0.2x).</li>
-      </ul>
-    </div>
-    <div>
-      <h3 className="text-sm font-medium mb-2">Special Notes</h3>
-      <ul className="text-xs text-[#64748b] space-y-2">
-        <li>Balls drop between x: 200–600 (top three pegs).</li>
-        <li>Edges have higher multipliers (e.g., 1000x), center lower (e.g., 0.2x).</li>
       </ul>
     </div>
   </>
@@ -90,8 +74,8 @@ export function Game() {
     if (ctx) ctx.scale(dpr, dpr);
 
     const newBallManager = new BallManager(canvas, (index, startX) => {
-      const multiplier = newBallManager.sinks[index]?.multiplier || 0;
-      const payout = bet * multiplier;
+      const multiplier = newBallManager.sinks[index].multiplier || 0;
+      const payout = Math.round(bet * multiplier);
       setBalance((prev) => prev + payout);
       setWinAmount(payout);
       setMessage(`Landed in ${multiplier}x sink!`);
@@ -134,7 +118,6 @@ export function Game() {
     }
     setBalance((prev) => prev - bet);
     setGameState("DROPPING");
-    setMessage("Dropping...");
     setWinAmount(0);
 
     // from what point i drop the ball
@@ -152,7 +135,7 @@ export function Game() {
     <div className="min-h-screen bg-[#fafafa] text-[#333333] flex flex-col">
       <InGameHeader
         coins={balance}
-        showGuide={true}
+        IsShowGuide={true}
         title="Plinko"
         description={PlinkoDescription}
       />
@@ -196,9 +179,9 @@ export function Game() {
           <Button
             className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
             onClick={handleAddBall}
-            disabled={gameState === "DROPPING" || bet > balance || bet <= 0}
+            disabled={ bet > balance || bet <= 0}
           >
-            {gameState === "DROPPING" ? "Dropping..." : "Drop Ball"}
+            {"Drop Ball"}
           </Button>
         </div>
 

@@ -70,14 +70,15 @@ export class BallManager {
 
   getColor(index: number) {
     const multiplier = this.sinks[index]?.multiplier || 0;
-    if (multiplier >= 16) return { background: "#b91c1c", color: "white" };    // Deep red
-    if (multiplier >= 9) return { background: "#dc2626", color: "white" };     // Bright red
-    if (multiplier >= 2) return { background: "#ea580c", color: "white" };     // Vibrant orange
-    if (multiplier >= 1.4) return { background: "#f97316", color: "white" };   // Warm orange
-    if (multiplier >= 1.2) return { background: "#fbbf24", color: "black" };   // Amber
-    if (multiplier >= 1.1) return { background: "#fcd34d", color: "black" };   // Soft yellow
-    if (multiplier >= 1) return { background: "#fef08a", color: "black" };     // Light yellow
-    return { background: "#e2e8f0", color: "#333333" };
+    if (multiplier >= 20) return { background: "#b91c1c", color: "white" };    // Deep red
+    if (multiplier >= 16) return { background: "#dc2626", color: "white" };     // Bright red
+    if (multiplier >= 4) return { background: "#ea580c", color: "white" };     // Vibrant orange
+    if (multiplier >= 2) return { background: "#f97316", color: "white" };   // Warm orange
+    if (multiplier >= 1.5) return { background: "#fbbf24", color: "black" };   // Amber
+    if (multiplier >= 1) return { background: "#fcd34d", color: "black" };     // Soft yellow
+    if (multiplier >= 0.8) return { background: "#fef08a", color: "black" };   // Light yellow
+    if (multiplier >= 0.5) return { background: "#fff7b3", color: "black" };   // Lighter yellow (new)
+    return { background: "#e2e8f0", color: "#333333" };                        // Default gray
   }
 
   drawSinks() {
