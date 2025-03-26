@@ -123,12 +123,12 @@ export class BallManager {
       // If text still doesn't fit, remove the "x" for very small sinks
       if (textWidth > maxTextWidth) {
         text = `${sink?.multiplier || 0}`; // Remove the "x"
-        this.ctx.font = `bold ${fontSize}px Arial`;
+        this.ctx.font = `${fontSize}px Arial`;
         textWidth = this.ctx.measureText(text).width;
         // One final adjustment if still too wide
         while (textWidth > maxTextWidth && fontSize > minFontSize) {
           fontSize -= 1;
-          this.ctx.font = `bold ${fontSize}px Arial`;
+          this.ctx.font = `${fontSize}px Arial`;
           textWidth = this.ctx.measureText(text).width;
         }
       }
