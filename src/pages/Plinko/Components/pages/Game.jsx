@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { BallManager } from "../game/classes/BallManager";
 import calc_function from "../game/calculate_pattern";
 import { pad } from "../game/padding";
-import { motion } from "framer-motion";
 import InGameHeader from "../../../Utils/InGameHeader";
 import BettingInput from "../../../Utils/BettingInput";
 import { Button } from "@/components/ui/button";
@@ -109,7 +108,6 @@ export function Game() {
 
   const handleAddBall = () => {
     if (!ballManagerRef.current || bet > balance || bet <= 0) {
-      setMessage("Invalid bet or insufficient balance!");
       return;
     }
     setBalance((prev) => prev - bet);
