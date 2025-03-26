@@ -42,24 +42,22 @@ export const createSinks = (): Sink[] => {
   const gap = 4; // Space between sinks
   const totalGapsWidth = gap * (NUM_SINKS - 1);
   const availableWidth = gridWidth - totalGapsWidth;
-  const minSinkWidth = 24; // Minimum width to ensure text fits (adjust as needed)
+  const minSinkWidth = 28; // Increased to 28px to give more room for text
   let sinkWidthAdjusted = availableWidth / NUM_SINKS;
-  
-  // Ensure sink width doesn't go below the minimum
+
   if (sinkWidthAdjusted < minSinkWidth) {
     sinkWidthAdjusted = minSinkWidth;
   }
 
-  // Recalculate total width with the adjusted sink width
   const totalSinksWidth = sinkWidthAdjusted * NUM_SINKS;
   const totalWidthWithGaps = totalSinksWidth + totalGapsWidth;
-  const startX = (WIDTH - totalWidthWithGaps) / 2; // Center the sinks
+  const startX = (WIDTH - totalWidthWithGaps) / 2;
   const y = HEIGHT - 140;
 
   for (let i = 0; i < NUM_SINKS; i++) {
     const x = startX + (sinkWidthAdjusted + gap) * i;
     const width = sinkWidthAdjusted;
-    const height = width; // Square sinks
+    const height = width;
     sinks.push({ x, y, width, height, multiplier: MULTIPLIERS[i] });
   }
 
