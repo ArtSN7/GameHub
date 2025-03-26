@@ -7,9 +7,7 @@ import { pad } from "../game/padding";
 import InGameHeader from "../../../Utils/InGameHeader";
 import BettingInput from "../../../Utils/BettingInput";
 import { Button } from "@/components/ui/button";
-
 import { WIDTH, HEIGHT } from "../game/constants";
-
 
 const PlinkoDescription = (
   <>
@@ -31,7 +29,6 @@ const PlinkoDescription = (
   </>
 );
 
-
 export function Game() {
   const ballManagerRef = useRef(null);
   const canvasRef = useRef(null);
@@ -47,14 +44,16 @@ export function Game() {
     const updateCanvasSize = () => {
       const container = canvasRef.current?.parentElement;
       if (!container) return;
-      const maxWidth = Math.min(container.clientWidth, window.innerHeight * 0.8); // Limit height to 80% of viewport
-      const size = Math.max(300, Math.min(maxWidth, 600)); // Min 300px, max 600px
+
+      // Use viewport units for responsive scaling
+      const maxWidth = Math.min(container.clientWidth, window.innerWidth * 0.9); // 90% of viewport width
+      const maxHeight = window.innerHeight * 0.6; // 60% of viewport height for canvas
+      const size = Math.max(300, Math.min(maxWidth, maxHeight, 600)); // Constrain between 300px and 600px
       setCanvasSize({ width: size, height: size });
     };
 
     updateCanvasSize();
     window.addEventListener("resize", updateCanvasSize);
-
     return () => window.removeEventListener("resize", updateCanvasSize);
   }, []);
 
@@ -97,23 +96,16 @@ export function Game() {
     requestAnimationFrame(animate);
 
     return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-      if (ballManagerRef.current) {
-        ballManagerRef.current.stop();
-      }
+      if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      if (ballManagerRef.current) ballManagerRef.current.stop();
     };
-  }, [canvasSize]); // Re-run when canvas size changes
+  }, [canvasSize, bet]);
 
   const handleAddBall = () => {
-    if (!ballManagerRef.current || bet > balance || bet <= 0) {
-      return;
-    }
+    if (!ballManagerRef.current || bet > balance || bet <= 0) return;
     setBalance((prev) => prev - bet);
     setGameState("DROPPING");
 
-    // from what point i drop the ball
     const response = calc_function();
     const minX = 370;
     const maxX = 430;
@@ -123,7 +115,6 @@ export function Game() {
     ballManagerRef.current.addBall(startX);
   };
 
-
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333] flex flex-col">
       <InGameHeader
@@ -132,19 +123,19 @@ export function Game() {
         title="Plinko"
         description={PlinkoDescription}
       />
-      <main className="flex-grow container px-4 py-8 mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#333333]">Plinko</h1>
+      <main className="flex-grow flex flex-col items-center justify-center px-4 py-8">
+        <div className="text-center mb-4 md:mb-8">
+          <h1 className="text-xl md:text-3xl font-bold text-[#333333]">Plinko</h1>
         </div>
 
-        <div className="mb-8 flex justify-center">
+        <div className="flex justify-center w-full max-w-[600px] mb-4 md:mb-8">
           <canvas
             ref={canvasRef}
-            className="rounded-xl shadow-sm bg-[#f1f5f9]"
+            className="rounded-xl shadow-sm bg-[#f1f5f9] w-full"
           />
         </div>
 
-        <div className="flex flex-col items-center gap-0">
+        <div className="flex flex-col items-center gap-4 w-full max-w-[400px]">
           <BettingInput
             bet={bet}
             setBet={setBet}
@@ -152,14 +143,13 @@ export function Game() {
             gameState={gameState}
           />
           <Button
-            className="bg-blue-500 hover:bg-blue-600 w-25 py-2 md:py-3 rounded-lg text-white font-small text-sm md:text-base"
+            className="bg-blue-500 hover:bg-blue-600 w-full max-w-[200px] py-2 md:py-3 rounded-lg text-white font-medium text-sm md:text-base"
             onClick={handleAddBall}
-            disabled={ bet > balance || bet <= 0}
+            disabled={bet > balance || bet <= 0}
           >
-            {"Drop Ball"}
+            Drop Ball
           </Button>
         </div>
-
       </main>
     </div>
   );

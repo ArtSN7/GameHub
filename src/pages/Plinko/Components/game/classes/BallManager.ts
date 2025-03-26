@@ -96,7 +96,7 @@ export class BallManager {
       );
       this.ctx.fill();
       this.ctx.fillStyle = color;
-      this.ctx.font = `bold ${Math.max(10, 12 * this.scale)}px Arial`;
+      this.ctx.font = `bold ${Math.max(9, 10 * this.scale)}px Arial`;
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
       this.ctx.fillText(
