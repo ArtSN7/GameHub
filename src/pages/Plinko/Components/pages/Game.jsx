@@ -42,8 +42,6 @@ export function Game() {
   const [balance, setBalance] = useState(1000);
   const [bet, setBet] = useState(100);
   const [gameState, setGameState] = useState("IDLE");
-  const [message, setMessage] = useState("");
-  const [winAmount, setWinAmount] = useState(0);
   const [canvasSize, setCanvasSize] = useState({ width: WIDTH, height: HEIGHT });
 
   useEffect(() => {
@@ -77,8 +75,6 @@ export function Game() {
       const multiplier = newBallManager.sinks[index].multiplier || 0;
       const payout = Math.round(bet * multiplier);
       setBalance((prev) => prev + payout);
-      setWinAmount(payout);
-      setMessage(`Landed in ${multiplier}x sink!`);
       setGameState("IDLE");
     });
     ballManagerRef.current = newBallManager;
@@ -118,7 +114,6 @@ export function Game() {
     }
     setBalance((prev) => prev - bet);
     setGameState("DROPPING");
-    setWinAmount(0);
 
     // from what point i drop the ball
     const response = calc_function();
@@ -144,24 +139,6 @@ export function Game() {
           <h1 className="text-3xl font-bold text-[#333333]">Plinko</h1>
         </div>
 
-        {message && (
-          <div className="flex justify-center mb-6">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`py-1.5 px-4 rounded-full text-sm font-medium ${
-                winAmount > bet
-                  ? "bg-green-100 text-green-700"
-                  : gameState === "DROPPING"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-blue-100 text-blue-700"
-              }`}
-            >
-              {message} {winAmount > 0 && `(Win: ${winAmount})`}
-            </motion.div>
-          </div>
-        )}
-
         <div className="mb-8 flex justify-center">
           <canvas
             ref={canvasRef}
@@ -169,7 +146,7 @@ export function Game() {
           />
         </div>
 
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-0">
           <BettingInput
             bet={bet}
             setBet={setBet}
@@ -177,7 +154,7 @@ export function Game() {
             gameState={gameState}
           />
           <Button
-            className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
+            className="bg-blue-500 hover:bg-blue-600 w-25 py-2 md:py-3 rounded-lg text-white font-small text-sm md:text-base"
             onClick={handleAddBall}
             disabled={ bet > balance || bet <= 0}
           >
