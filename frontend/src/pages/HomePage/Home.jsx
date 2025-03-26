@@ -4,9 +4,9 @@ import Footer from "../Utils/Footer"
 import BalanceComponent from "./BalanceComponent"
 import GameOptions from "./GameOptions"
 
+
 export default function HomePage() {
 
-  
   return (
     <div className="min-h-screen bg-[#f8fafc] text-[#0f172a]">
 

@@ -20,7 +20,14 @@ export default defineConfig({
     // Exposes your dev server and makes it accessible for the devices in the same network.
     host: false,
     https: false,
-    port: 3000
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api') // Keep /api in the path
+      }
+    }
   },
   resolve: {
     alias: {
