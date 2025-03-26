@@ -39,17 +39,27 @@ export const createObstacles = (): Obstacle[] => {
 
 export const createSinks = (): Sink[] => {
   const sinks: Sink[] = [];
-  const gap = 4; // Space between sinks (adjustable)
-  const totalGapsWidth = gap * (NUM_SINKS - 1); // Total width of gaps
-  const availableWidth = gridWidth - totalGapsWidth; // Width available for sinks
-  const sinkWidthAdjusted = availableWidth / NUM_SINKS; // Dynamic sink width
-  const startX = (WIDTH - gridWidth) / 2; // Center the sinks
-  const y = HEIGHT - 140; // Position sinks at the bottom
+  const gap = 4; // Space between sinks
+  const totalGapsWidth = gap * (NUM_SINKS - 1);
+  const availableWidth = gridWidth - totalGapsWidth;
+  const minSinkWidth = 24; // Minimum width to ensure text fits (adjust as needed)
+  let sinkWidthAdjusted = availableWidth / NUM_SINKS;
+  
+  // Ensure sink width doesn't go below the minimum
+  if (sinkWidthAdjusted < minSinkWidth) {
+    sinkWidthAdjusted = minSinkWidth;
+  }
+
+  // Recalculate total width with the adjusted sink width
+  const totalSinksWidth = sinkWidthAdjusted * NUM_SINKS;
+  const totalWidthWithGaps = totalSinksWidth + totalGapsWidth;
+  const startX = (WIDTH - totalWidthWithGaps) / 2; // Center the sinks
+  const y = HEIGHT - 140;
 
   for (let i = 0; i < NUM_SINKS; i++) {
-    const x = startX + (sinkWidthAdjusted + gap) * i; // Position with gap
+    const x = startX + (sinkWidthAdjusted + gap) * i;
     const width = sinkWidthAdjusted;
-    const height = width - 10 ; // Square sinks
+    const height = width; // Square sinks
     sinks.push({ x, y, width, height, multiplier: MULTIPLIERS[i] });
   }
 
