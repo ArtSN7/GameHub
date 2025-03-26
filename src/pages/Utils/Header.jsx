@@ -20,7 +20,7 @@ export default function Header() {
           <div className="bg-gradient-to-r from-blue-500 to-cyan-400 p-1.5 rounded-lg">
             <Spade className="h-5 w-5 text-white" />
           </div>
-          <span className="font-semibold text-xl tracking-tight">GameHub</span>
+          <span className="font-semibold text-xl tracking-tight">GameHob</span>
         </div>
 
         {/* Desktop Navigation */}

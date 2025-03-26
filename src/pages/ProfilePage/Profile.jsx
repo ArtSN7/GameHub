@@ -115,31 +115,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="text-center md:text-left flex-1">
-                {editMode ? (
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        name="username"
-                        value={userData.username}
-                        onChange={handleInputChange}
-                        className="max-w-xs"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={userData.email}
-                        onChange={handleInputChange}
-                        className="max-w-xs"
-                      />
-                    </div>
-                  </div>
-                ) : (
+                {
                   <>
                     <h1 className="text-2xl font-bold mb-1">{userData.username}</h1>
                     <p className="text-[#64748b] mb-4">Member since {userData.memberSince}</p>
@@ -149,30 +125,10 @@ export default function ProfilePage() {
                         <Trophy className="h-4 w-4 text-blue-500" />
                         <span className="text-sm">Level {userData.level}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        <span className="text-sm">{userData.rating} Rating</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">{userData.hoursPlayed} Hours Played</span>
-                      </div>
                     </div>
                   </>
-                )}
+                }
               </div>
-
-              {editMode ? (
-                <Button onClick={saveProfile} className="ml-auto bg-green-500 hover:bg-green-600">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-              ) : (
-                <Button onClick={toggleEditMode} className="ml-auto bg-blue-500 hover:bg-blue-600">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -373,57 +329,8 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Recent Activity */}
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Recent Activity</h3>
-                  <div className="space-y-2">
-                    <div className="bg-white p-3 rounded-lg border border-[#e2e8f0] flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <Trophy className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Won 1,200 coins in Blackjack</p>
-                          <p className="text-xs text-[#64748b]">Today, 2:45 PM</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-500">Win</Badge>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg border border-[#e2e8f0] flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                          <X className="h-5 w-5 text-red-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Lost 500 coins in Roulette</p>
-                          <p className="text-xs text-[#64748b]">Today, 1:30 PM</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-red-500">Loss</Badge>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg border border-[#e2e8f0] flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <Trophy className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Won 2,800 coins in Plinko</p>
-                          <p className="text-xs text-[#64748b]">Yesterday, 8:15 PM</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-500">Win</Badge>
-                    </div>
-                  </div>
-                </div>
+                
               </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50">
-                  View Full Game History
-                </Button>
-              </CardFooter>
             </Card>
           </TabsContent>
 

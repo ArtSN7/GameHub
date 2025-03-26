@@ -1,12 +1,14 @@
 import { useNavigate }from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Spade, Coins, Bomb, LoaderPinwheel} from "lucide-react"
+import { Spade, Coins, Bomb, LoaderPinwheel, Club, Heart} from "lucide-react"
 
 import blackjackImage from "../../components/images/blackjack.jpg";
 import scratchImage from "../../components/images/scratch.jpg";
 import slotsImage from "../../components/images/slots.jpg";
 import texasholdemImage from "../../components/images/texasholdem.jpg";
+import plinkoImage from "../../components/images/plinko.jpg";
+
 
 
 export default function GameOptions() {
@@ -39,7 +41,7 @@ export default function GameOptions() {
       <GameCard
         title="Blackjack"
         description="Classic card game against the dealer"
-        icon={<Spade className="h-5 w-5" />}
+        icon={<Club className="h-5 w-5" />}
         color="#3b82f6"
         bgImage={blackjackImage}
         imageName="blackjack.jpg"
@@ -48,7 +50,7 @@ export default function GameOptions() {
       <GameCard
         title="Texas Hold'Em"
         description="Poker game with community cards"
-        icon={<Spade className="h-5 w-5" />}
+        icon={<Heart className="h-5 w-5" />}
         color="#8b5cf6"
         bgImage={texasholdemImage}
         imageName="poker.jpg"
@@ -76,9 +78,9 @@ export default function GameOptions() {
         title="Plinko"
         description="Drop the ball and enjoy"
         icon={<LoaderPinwheel className="h-5 w-5" />}
-        color="#3b82f6"
-        bgImage={blackjackImage}
-        imageName="blackjack.jpg"
+        color="#f6793b"
+        bgImage={plinkoImage}
+        imageName="plinko.jpg"
         onPlay={playPlinko} // Pass the function as a prop
       />
     </div>

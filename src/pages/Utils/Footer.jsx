@@ -12,7 +12,7 @@ export default function Footer() {
               <div className="bg-gradient-to-r from-blue-500 to-cyan-400 p-1.5 rounded-lg">
                 <Spade className="h-4 w-4 text-white" />
               </div>
-              <span className="font-semibold">GameHub</span>
+              <span className="font-semibold">GameHob</span>
             </div>
 
             <div className="flex gap-8 text-sm">
