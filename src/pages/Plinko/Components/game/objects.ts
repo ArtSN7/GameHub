@@ -38,15 +38,18 @@ export const createObstacles = (): Obstacle[] => {
 };
 
 export const createSinks = (): Sink[] => {
-  const sinks = [];
-  const startX = (WIDTH - gridWidth) / 2; // Center the sinks under the grid
-  const sinkWidthAdjusted = gridWidth / NUM_SINKS; // Should be 32px
+  const sinks: Sink[] = [];
+  const gap = 4; // Space between sinks (adjustable)
+  const totalGapsWidth = gap * (NUM_SINKS - 1); // Total width of gaps
+  const availableWidth = gridWidth - totalGapsWidth; // Width available for sinks
+  const sinkWidthAdjusted = availableWidth / NUM_SINKS; // Dynamic sink width
+  const startX = (WIDTH - gridWidth) / 2; // Center the sinks
   const y = HEIGHT - 140; // Position sinks at the bottom
 
   for (let i = 0; i < NUM_SINKS; i++) {
-    const x = startX + sinkWidthAdjusted * i;
+    const x = startX + (sinkWidthAdjusted + gap) * i; // Position with gap
     const width = sinkWidthAdjusted;
-    const height = width; // Square sinks
+    const height = width - 10 ; // Square sinks
     sinks.push({ x, y, width, height, multiplier: MULTIPLIERS[i] });
   }
 

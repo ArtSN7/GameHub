@@ -8,6 +8,7 @@ import InGameHeader from "../../../Utils/InGameHeader";
 import BettingInput from "../../../Utils/BettingInput";
 import { Button } from "@/components/ui/button";
 import { WIDTH, HEIGHT } from "../game/constants";
+ import { motion } from "framer-motion";
 
 const PlinkoDescription = (
   <>
@@ -34,6 +35,8 @@ export function Game() {
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
   const lastFrameTime = useRef(0);
+
+  const [message, setMessage] = useState("Drop some balls!");
 
   const [balance, setBalance] = useState(1000);
   const [bet, setBet] = useState(100);
@@ -74,6 +77,7 @@ export function Game() {
       const payout = Math.round(bet * multiplier);
       setBalance((prev) => prev + payout);
       setGameState("IDLE");
+      setMessage(`Landed in ${multiplier}x sink!`);
     });
     ballManagerRef.current = newBallManager;
 
@@ -105,6 +109,7 @@ export function Game() {
     if (!ballManagerRef.current || bet > balance || bet <= 0) return;
     setBalance((prev) => prev - bet);
     setGameState("DROPPING");
+    setMessage(`Dropping...`);
 
     const response = calc_function();
     const minX = 370;
@@ -127,6 +132,20 @@ export function Game() {
         <div className="text-center mb-4 md:mb-8">
           <h1 className="text-xl md:text-3xl font-bold text-[#333333]">Plinko</h1>
         </div>
+
+        {message && (
+           <div className="flex justify-center mb-6">
+             <motion.div
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               className={`py-1.5 px-4 rounded-full text-sm font-medium ${
+                   "bg-blue-100 text-blue-700"
+               }`}
+             >
+               {message}
+             </motion.div>
+           </div>
+         )}
 
         <div className="flex justify-center w-full max-w-[600px] mb-4 md:mb-8">
           <canvas
