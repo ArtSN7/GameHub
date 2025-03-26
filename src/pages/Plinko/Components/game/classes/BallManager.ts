@@ -104,7 +104,7 @@ export class BallManager {
       let fontSize = Math.min(maxFontSize, Math.max(minFontSize, 10 * this.scale)); // Base font size scaled, but constrained
 
       this.ctx.fillStyle = color;
-      this.ctx.font = `bold ${fontSize}px Arial`;
+      this.ctx.font = ` ${fontSize}px Arial`;
       this.ctx.textAlign = "center";
       this.ctx.textBaseline = "middle";
 
@@ -116,7 +116,7 @@ export class BallManager {
       // Adjust font size if text is too wide
       while (textWidth > maxTextWidth && fontSize > minFontSize) {
         fontSize -= 1;
-        this.ctx.font = `bold ${fontSize}px Arial`;
+        this.ctx.font = `${fontSize}px Arial`;
         textWidth = this.ctx.measureText(text).width;
       }
 
