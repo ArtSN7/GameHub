@@ -49,7 +49,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <Link to="/profile" className="relative">
             <img
-              src={`${user.photoUrl}?height=40&width=40`}
+              src={`${user.telegramUser.photoUrl}?height=40&width=40`}
               alt="Profile"
               width={40}
               height={40}

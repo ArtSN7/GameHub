@@ -1,95 +1,203 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Gift, Coins } from "lucide-react"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy, Gift, Coins } from "lucide-react";
+import { motion } from "framer-motion";
 
-import Footer from "../Utils/Footer"
-import InGameHeader from "../Utils/InGameHeader"
-import { useUser } from './../../components/App'
-import GameStats from "./Components/Stats/GameStats"
-import OverallStats from "./Components/Stats/OverallStats"
-import ProfileHeader from "./Components/ProfileHeader"
-import Bonuses from "./Components/Rewards/Bonuses"
-import AvailableAds from "./Components/Rewards/AvailableAds"
-import AdDialog from "./Components/Rewards/AdDialog"
-import SpecialBonuses from "./Components/Rewards/SpecialBonuses"
-import Promocodes from "./Components/Promocodes/Promocodes"
-import { initialAds, watchAdFunc, claimAdRewardFunc, generateMoreAds } from "./Components/Rewards/AdUtils"
+import Footer from "../Utils/Footer";
+import InGameHeader from "../Utils/InGameHeader";
+import { useUser } from './../../components/App';
+import GameStats from "./Components/Stats/GameStats";
+import OverallStats from "./Components/Stats/OverallStats";
+import ProfileHeader from "./Components/ProfileHeader";
+import Bonuses from "./Components/Rewards/Bonuses";
+import AvailableAds from "./Components/Rewards/AvailableAds";
+import AdDialog from "./Components/Rewards/AdDialog";
+import SpecialBonuses from "./Components/Rewards/SpecialBonuses";
+import Promocodes from "./Components/Promocodes/Promocodes";
+import { initialAds, watchAdFunc, claimAdRewardFunc, generateMoreAds } from "./Components/Rewards/AdUtils";
 
 export default function ProfilePage() {
-  const { user } = useUser()
-  
-  const [coins, setCoins] = useState(24680)
-  const [userData] = useState({
-    username: user.username,
-    email: user.first_name + " " + user.last_name,
-    memberSince: "January 2023",
-    level: 12,
-    rating: 4.8,
-    hoursPlayed: 120,
-    profileImage: user.photoUrl,
-  })
-  const [promocode, setPromocode] = useState("")
-  const [promocodeStatus, setPromocodeStatus] = useState(null)
-  const [showAdDialog, setShowAdDialog] = useState(false)
-  const [currentAd, setCurrentAd] = useState(null)
-  const [adProgress, setAdProgress] = useState(0)
-  const [adPlaying, setAdPlaying] = useState(false)
-  const [showConfetti, setShowConfetti] = useState(false)
-  const [availableAds, setAvailableAds] = useState(initialAds)
+  const { user, setUser } = useUser();
+  const [userData, setUserData] = useState(null);
+  const [coins, setCoins] = useState(0);
+  const [stats, setStats] = useState(null);
+  const [bonuses, setBonuses] = useState(null);
+  const [totalWins, setTotalWins] = useState(0);
+  const [totalGames, setTotalGames] = useState(0);
+  const [promocode, setPromocode] = useState("");
+  const [promocodeStatus, setPromocodeStatus] = useState(null);
+  const [showAdDialog, setShowAdDialog] = useState(false);
+  const [currentAd, setCurrentAd] = useState(null);
+  const [adProgress, setAdProgress] = useState(0);
+  const [adPlaying, setAdPlaying] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [availableAds, setAvailableAds] = useState(initialAds);
 
-  const watchAd = (ad) => watchAdFunc(ad, setCurrentAd, setAdProgress, setAdPlaying, setShowAdDialog)
-  
-  const claimAdReward = () => claimAdRewardFunc(
-    currentAd, 
-    coins, 
-    setCoins, 
-    setShowConfetti, 
-    setRewardHistory, 
-    setShowAdDialog
-  )
-
-  const claimBonus = (bonus) => {
-    setCoins(coins + bonus.reward)
-    setShowConfetti(true)
-
-    const historyItem = {
-      id: Date.now(),
-      type: "bonus",
-      title: bonus.title,
-      reward: bonus.reward,
-      timestamp: new Date(),
+  // Fetch user data from the backend
+  const fetchUserData = async () => {
+    if (!user.dbUser?.id) {
+      console.error('No user ID available');
+      return;
     }
-    setRewardHistory(prev => [historyItem, ...prev])
+
+    try {
+      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      const data = await response.json();
+      setUserData({
+        username: data.username,
+        memberSince: data.createdAt,
+        level: data.level || 1,
+        rating: data.rating || 0.0,
+        hoursPlayed: data.hoursPlayed || 0.0,
+        profileImage: user.telegramUser?.photoUrl || '',
+      });
+      setCoins(data.balance || 0);
+      setStats(data.stats);
+      setBonuses(data.bonuses);
+      setTotalWins(data.total_wins || 0);
+      setTotalGames(data.total_games || 0);
+
+      // Update user context with latest data
+      setUser((prev) => ({
+        ...prev,
+        dbUser: {
+          ...prev.dbUser,
+          ...data,
+        },
+      }));
+    } catch (error) {
+      console.error('Error fetching user data:', error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, [user.dbUser?.id, setUser]);
+
+  const watchAd = (ad) => watchAdFunc(ad, setCurrentAd, setAdProgress, setAdPlaying, setShowAdDialog);
+
+  const claimAdReward = () => {
+    const updatedCoins = coins + currentAd.reward;
+    setCoins(updatedCoins);
+    setShowConfetti(true);
+
+    // Update balance in the database
+    fetch(`/api/users/${user.dbUser.id}/balance`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ balance: updatedCoins }),
+    }).then((response) => {
+      if (!response.ok) {
+        console.error('Failed to update balance');
+      }
+    });
 
     setTimeout(() => {
-      setShowConfetti(false)
-    }, 2000)
-  }
+      setShowConfetti(false);
+    }, 2000);
 
-  const handleRedeemPromocode = () => {
+    setShowAdDialog(false);
+  };
+
+  const claimBonus = async (bonus) => {
+    const updatedCoins = coins + bonus.reward;
+    setCoins(updatedCoins);
+    setShowConfetti(true);
+
+    try {
+      // Update balance in the database
+      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ balance: updatedCoins }),
+      });
+
+      // Update bonus in the database
+      await fetch(`/api/users/${user.dbUser.id}/bonus`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bonusType: bonus.type }),
+      });
+
+      // Refresh user data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Error claiming bonus:', error.message);
+    }
+
+    setTimeout(() => {
+      setShowConfetti(false);
+    }, 2000);
+  };
+
+  const handleRedeemPromocode = async () => {
     if (!promocode.trim()) {
-      setPromocodeStatus({ success: false, message: "Please enter a promocode" })
-      return
+      setPromocodeStatus({ success: false, message: "Please enter a promocode" });
+      return;
     }
 
+    let reward = 0;
+    let message = '';
     if (promocode.toLowerCase() === "bonus100") {
-      setCoins(coins + 1000)
-      setPromocodeStatus({ success: true, message: "Successfully redeemed 1,000 coins!" })
-      setPromocode("")
+      reward = 1000;
+      message = "Successfully redeemed 1,000 coins!";
     } else if (promocode.toLowerCase() === "welcome500") {
-      setCoins(coins + 500)
-      setPromocodeStatus({ success: true, message: "Successfully redeemed 500 coins!" })
-      setPromocode("")
+      reward = 500;
+      message = "Successfully redeemed 500 coins!";
     } else {
-      setPromocodeStatus({ success: false, message: "Invalid promocode. Please try again." })
+      setPromocodeStatus({ success: false, message: "Invalid promocode. Please try again." });
+      setTimeout(() => setPromocodeStatus(null), 3000);
+      return;
     }
 
-    setTimeout(() => setPromocodeStatus(null), 3000)
+    const updatedCoins = coins + reward;
+    setCoins(updatedCoins);
+    setPromocodeStatus({ success: true, message });
+    setPromocode("");
+
+    try {
+      // Update balance in the database
+      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ balance: updatedCoins }),
+      });
+
+      // Update promo code in the database
+      await fetch(`/api/users/${user.dbUser.id}/bonus`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bonusType: 'promoCode', promoCode: promocode }),
+      });
+
+      // Refresh user data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Error redeeming promocode:', error.message);
+    }
+
+    setTimeout(() => setPromocodeStatus(null), 3000);
+  };
+
+  if (!userData || !stats || !bonuses) {
+    return <div>Loading profile...</div>;
   }
 
   return (
@@ -121,11 +229,11 @@ export default function ProfilePage() {
                 <CardTitle>Game Statistics</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <OverallStats total_wins={20} total_games={100} />
+                <OverallStats total_wins={totalWins} total_games={totalGames} />
                 <div>
                   <h3 className="text-lg font-medium mb-3">Game Performance</h3>
                   <div className="space-y-4">
-                    <GameStats />
+                    <GameStats stats={stats} />
                   </div>
                 </div>
               </CardContent>
@@ -141,7 +249,7 @@ export default function ProfilePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <Bonuses claimBonus={claimBonus} />
+                <Bonuses claimBonus={claimBonus} bonuses={bonuses} />
                 <AvailableAds availableAds={availableAds} watchAd={watchAd} />
                 <div className="mt-4 flex justify-center">
                   <Button
@@ -152,7 +260,7 @@ export default function ProfilePage() {
                     Load More Ads
                   </Button>
                 </div>
-                <SpecialBonuses claimBonus={claimBonus} />
+                <SpecialBonuses claimBonus={claimBonus} bonuses={bonuses} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -164,6 +272,7 @@ export default function ProfilePage() {
               promocodeStatus={promocodeStatus}
               setPromocodeStatus={setPromocodeStatus}
               handleRedeemPromocode={handleRedeemPromocode}
+              usedPromoCode={bonuses.promoCodeUsed}
             />
           </TabsContent>
         </Tabs>
@@ -200,5 +309,5 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
-  )
+  );
 }

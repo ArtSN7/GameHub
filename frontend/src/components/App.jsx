@@ -14,10 +14,8 @@ import { useEffect, useMemo, createContext, useState, useContext } from 'react';
 import { Navigate, Route, Router, Routes } from 'react-router-dom';
 import { routes } from '@/navigation/routes.jsx';
 
-
 // Create a User Context
 const UserContext = createContext();
-
 
 export function App() {
   const lp = useLaunchParams();
@@ -71,13 +69,50 @@ export function App() {
     return <div>Initializing Telegram Mini App...</div>;
   }
 
-  // Store user in state
-  const [user, setUser] = useState(lp.initData.user);
+  // Store user in state (both Telegram user and database user)
+  const [user, setUser] = useState({
+    telegramUser: lp.initData.user, // Telegram user data
+    dbUser: null, // Database user data (including id)
+  });
 
+  // Sync user with the backend
   useEffect(() => {
-    setUser(lp.initData.user);
+    const syncUserWithBackend = async () => {
+      if (!lp.initData.user) {
+        console.warn('No user data available in launch parameters');
+        return;
+      }
+
+      const { id: telegramId, username } = lp.initData.user;
+      try {
+        const response = await fetch('/api/sync_user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ telegramId: telegramId.toString(), username }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to sync user with backend');
+        }
+
+        const dbUser = await response.json();
+        setUser((prev) => ({
+          ...prev,
+          dbUser, // Store the database user data (including id)
+        }));
+      } catch (error) {
+        console.error('Error syncing user with backend:', error.message);
+      }
+    };
+
+    syncUserWithBackend();
   }, [lp]);
 
+  if (!user.dbUser) {
+    return <div>Syncing user with backend...</div>;
+  }
 
   return (
     <UserContext.Provider value={{ user, setUser }}>
