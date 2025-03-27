@@ -1,14 +1,13 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { Coins } from "lucide-react"
 
-export default function Bonuses() {
+export default function Bonuses({ claimBonus }) {
   const [dailyBonusClaimed, setDailyBonusClaimed] = useState(false)
   const [weeklyBonusClaimed, setWeeklyBonusClaimed] = useState(false)
-  const [coins, setCoins] = useState(0) // Added missing state
-  const [rewardHistory, setRewardHistory] = useState([]) // Added missing state
-  const [showConfetti, setShowConfetti] = useState(false) // Added missing state
 
   const dailyBonuses = [
     {
@@ -31,28 +30,13 @@ export default function Bonuses() {
     },
   ]
 
-  const claimBonus = (bonus) => {
-    setCoins(coins + bonus.reward)
-    setShowConfetti(true)
-
-    const historyItem = {
-      id: Date.now(),
-      type: "bonus",
-      title: bonus.title,
-      reward: bonus.reward,
-      timestamp: new Date(),
-    }
-    setRewardHistory([historyItem, ...rewardHistory])
-
+  const handleClaim = (bonus) => {
+    claimBonus(bonus)
     if (bonus.id === "daily") {
       setDailyBonusClaimed(true)
     } else if (bonus.id === "weekly") {
       setWeeklyBonusClaimed(true)
     }
-
-    setTimeout(() => {
-      setShowConfetti(false)
-    }, 2000)
   }
 
   return (
@@ -105,7 +89,7 @@ export default function Bonuses() {
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
                     disabled={!bonus.available}
-                    onClick={() => bonus.available && claimBonus(bonus)}
+                    onClick={() => bonus.available && handleClaim(bonus)}
                   >
                     {bonus.available ? "Claim" : "Claimed"}
                   </Button>

@@ -43,11 +43,28 @@ export default function ProfilePage() {
   const [availableAds, setAvailableAds] = useState(initialAds)
 
   const watchAd = (ad) => watchAdFunc(ad, setCurrentAd, setAdProgress, setAdPlaying, setShowAdDialog)
-  const claimAdReward = () => claimAdRewardFunc(currentAd, coins, setCoins, setShowConfetti, setShowAdDialog)
+  
+  const claimAdReward = () => claimAdRewardFunc(
+    currentAd, 
+    coins, 
+    setCoins, 
+    setShowConfetti, 
+    setRewardHistory, 
+    setShowAdDialog
+  )
 
   const claimBonus = (bonus) => {
     setCoins(coins + bonus.reward)
     setShowConfetti(true)
+
+    const historyItem = {
+      id: Date.now(),
+      type: "bonus",
+      title: bonus.title,
+      reward: bonus.reward,
+      timestamp: new Date(),
+    }
+    setRewardHistory(prev => [historyItem, ...prev])
 
     setTimeout(() => {
       setShowConfetti(false)
@@ -124,7 +141,7 @@ export default function ProfilePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <Bonuses />
+                <Bonuses claimBonus={claimBonus} />
                 <AvailableAds availableAds={availableAds} watchAd={watchAd} />
                 <div className="mt-4 flex justify-center">
                   <Button
