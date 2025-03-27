@@ -6,9 +6,6 @@ export default function OverallStats({total_wins, total_games}) {
   ? Math.round((total_wins / total_games) * 100) 
   : 0;
 
-  console.log(winPercentage)
-
-
   return (
         <div>
         <h3 className="text-lg font-medium mb-3">Overall Performance</h3>

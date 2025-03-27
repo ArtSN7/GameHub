@@ -37,6 +37,15 @@ export default function ProfilePage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [availableAds, setAvailableAds] = useState(initialAds);
 
+  const formatTime = async (time) => {
+
+    const date = new Date(time);
+    const fullDate = new Intl.DateTimeFormat('en-US', { dateStyle: 'long' }).format(date);
+
+    return fullDate;
+
+  }
+
   // Fetch user data from the backend
   const fetchUserData = async () => {
     if (!user.dbUser?.id) {
@@ -52,7 +61,7 @@ export default function ProfilePage() {
       const data = await response.json();
       setUserData({
         username: data.username,
-        memberSince: data.createdAt,
+        memberSince: await formatTime(data.createdAt),
         level: data.level || 1,
         rating: data.rating || 0.0,
         hoursPlayed: data.hoursPlayed || 0.0,
