@@ -67,6 +67,7 @@ export default function ProfilePage() {
         hoursPlayed: data.hoursPlayed || 0.0,
         profileImage: user.telegramUser?.photoUrl || '',
       });
+      console.log(data.balance)
       setCoins(data.balance || 0);
       setStats(data.stats);
       setBonuses(data.bonuses);

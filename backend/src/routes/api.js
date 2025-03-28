@@ -7,24 +7,6 @@ import { initializeBonuses, getBonusesByUserId, updateBonuses } from '../models/
 
 const router = express.Router();
 
-// Existing routes
-router.get('/hello', (req, res) => {
-  res.json({ message: 'Hello from the backend API!' });
-});
-
-router.post('/data', (req, res, next) => {
-  const { name } = req.body;
-  if (!name) {
-    return next(new AppError('Name is required', 400));
-  }
-  res.json({ message: `Hello, ${name}!` });
-});
-
-router.get('/health', (req, res) => {
-  console.log('Health check received');
-  res.status(200).send('OK');
-});
-
 // Sync Telegram user
 router.post('/sync_user', asyncHandler(async (req, res) => {
   const { telegramId, username } = req.body;
@@ -58,7 +40,7 @@ router.post('/users', asyncHandler(async (req, res) => {
   if (existingUser) {
     throw new AppError('Username already exists', 400);
   }
-  const userId = await createUser(null, username, balance || 0.0);
+  const userId = await createUser(null, username, balance || 5000.0);
   await initializeGameStats(userId);
   await initializeBonuses(userId);
   const user = await getUserById(userId);

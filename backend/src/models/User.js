@@ -34,7 +34,7 @@ const calculateLevel = (totalGames) => {
 };
 
 // CRUD functions for users
-export const createUser = async (telegramId, username, balance = 0.0) => {
+export const createUser = async (telegramId, username, balance = 5000.0) => {
   const query = 'INSERT INTO users (telegramId, username, balance) VALUES (?, ?, ?)';
   const params = [telegramId, username, balance];
   const result = await runQuery(query, params);

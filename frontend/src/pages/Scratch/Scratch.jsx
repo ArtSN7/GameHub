@@ -1,97 +1,168 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import {Link} from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, RefreshCw, Bomb, Plus, Minus, Diamond } from "lucide-react"
-import { motion } from "framer-motion"
-import BettingInput from "../Utils/BettingInput"
-import InGameHeader from "../Utils/InGameHeader"
-
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import BettingInput from "../Utils/BettingInput";
+import InGameHeader from "../Utils/InGameHeader";
+import { Bomb, Diamond } from "lucide-react";
+import { useUser } from './../../components/App';
 
 // Game multipliers
 const MULTIPLIERS = {
-    LOW: { value: 1.5, rows: 5, cols: 5, bombs: 2 },
-    MEDIUM: { value: 2, rows: 6, cols: 6, bombs: 3 },
-    HIGH: { value: 3.5, rows: 7, cols: 7, bombs: 4 },
-}
-  
-  // Cell states
+  LOW: { value: 1.5, rows: 5, cols: 5, bombs: 2 },
+  MEDIUM: { value: 2, rows: 6, cols: 6, bombs: 3 },
+  HIGH: { value: 3.5, rows: 7, cols: 7, bombs: 4 },
+};
+
+// Cell states
 const CELL_STATE = {
   HIDDEN: "hidden",
   REVEALED: "revealed",
-}
-  
-  // Cell types
+};
+
+// Cell types
 const CELL_TYPE = {
   SAFE: "safe",
   BOMB: "bomb",
-}
-  
-  // Game states
+};
+
+// Game states
 const GAME_STATE = {
   READY: "ready",
   PLAYING: "playing",
   WON: "won",
   LOST: "lost",
   TOOK_LEAVE: "took_leave",
-}
-
+};
 
 export default function ScratchTheCardPage() {
-  const [multiplier, setMultiplier] = useState(MULTIPLIERS.LOW) // type of game 
-  const [grid, setGrid] = useState([]) // grid of cells
+  const { user, setUser } = useUser();
 
-  const [gameState, setGameState] = useState(GAME_STATE.READY)
+  const [multiplier, setMultiplier] = useState(MULTIPLIERS.LOW);
+  const [grid, setGrid] = useState([]);
+  const [gameState, setGameState] = useState(GAME_STATE.READY);
+  const [balance, setBalance] = useState(0);
+  const [bet, setBet] = useState(100);
+  const [moneyForReveal, setMoneyForReveal] = useState(0);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [safeCount, setSafeCount] = useState(0);
+  const [message, setMessage] = useState("Reveal cells without hitting bombs");
+  const [potentialWin, setPotentialWin] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [balance, setBalance] = useState(1000) // balance of the user 
-  const [bet, setBet] = useState(100) // initial bet amount 
+  // Consolidated game stats
+  const [gameStats, setGameStats] = useState({
+    gamesPlayed: 0,
+    gamesWon: 0,
+    scratchCardTotalWin: 0,
+  });
 
-  const [money_for_reveal_cell, setMoneyForReveal] = useState(0) // winning amount , adjusted every time user opens a cell without hitting a bomb
+  const fetchUserData = async () => {
+    if (!user.dbUser?.id) {
+      console.error('No user ID available');
+      setIsLoading(false);
+      return;
+    }
 
+    try {
+      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      const data = await response.json();
+      setBalance(data.balance || 0);
+      setGameStats({
+        gamesPlayed: data.stats?.scratchCardPlayed || 0,
+        gamesWon: data.stats?.scratchCardWins || 0,
+        scratchCardTotalWin: data.stats?.scratchCardTotalWin || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching user data:', error.message);
+      setMessage("Failed to load user data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const [revealedCount, setRevealedCount] = useState(0) // number of cells revealed
-  const [safeCount, setSafeCount] = useState(0)
-  const [message, setMessage] = useState("Reveal cells without hitting bombs") // message which will be displayed to the user
-  const [potentialWin, setPotentialWin] = useState(0) // potential win amount if all of the safe cells are revealed
+  const updateBackend = async () => {
+    try {
+      // Update balance in the database
+      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ balance }),
+      });
 
+      // Update game stats in the database
+      await fetch(`/api/users/${user.dbUser.id}/game`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameType: "scratchCard",
+          played: gameStats.gamesPlayed,
+          won: gameStats.gamesWon,
+          totalWin: gameStats.scratchCardTotalWin,
+        }),
+      });
 
-  useEffect(() => { // when the multiplier changes, initialize the new grid 
-    initializeGame()
-  }, [multiplier])
+      // Refresh user data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Error updating backend:', error.message);
+      setMessage("Failed to update game stats. Please try again.");
+    }
+  };
 
-  useEffect(() => { // when the bet or multiplier changes, update the potential win amount
-    setPotentialWin(Math.floor(bet * multiplier.value))
-  }, [bet, multiplier])
+  useEffect(() => {
+    fetchUserData();
+    initializeGame();
+  }, []);
+
+  useEffect(() => {
+    if (gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST || gameState === GAME_STATE.TOOK_LEAVE) {
+      updateBackend();
+    }
+  }, [gameState]);
+
+  useEffect(() => {
+    initializeGame();
+  }, [multiplier]);
+
+  useEffect(() => {
+    setPotentialWin(Math.floor(bet * multiplier.value));
+  }, [bet, multiplier]);
 
   const changeMultiplier = (newMultiplier) => {
-    if (gameState === GAME_STATE.PLAYING) return
-    setMultiplier(newMultiplier)
-  }
+    if (gameState === GAME_STATE.PLAYING) return;
+    setMultiplier(newMultiplier);
+  };
 
-  // initialize the game grid
   const initializeGame = () => {
-    const { rows, cols, bombs } = multiplier
-    const totalCells = rows * cols
-    const bombPositions = []
+    const { rows, cols, bombs } = multiplier;
+    const totalCells = rows * cols;
+    const bombPositions = [];
 
-    while (bombPositions.length < bombs) { // randomly generate bomb positions
-      const pos = Math.floor(Math.random() * totalCells)
+    while (bombPositions.length < bombs) {
+      const pos = Math.floor(Math.random() * totalCells);
       if (!bombPositions.includes(pos)) {
-        bombPositions.push(pos)
+        bombPositions.push(pos);
       }
     }
 
-    const newGrid = []
+    const newGrid = [];
     for (let i = 0; i < rows; i++) {
-      const row = []
+      const row = [];
       for (let j = 0; j < cols; j++) {
-        const index = i * cols + j
-        let type = CELL_TYPE.SAFE
+        const index = i * cols + j;
+        let type = CELL_TYPE.SAFE;
 
         if (bombPositions.includes(index)) {
-          type = CELL_TYPE.BOMB
+          type = CELL_TYPE.BOMB;
         }
 
         row.push({
@@ -99,123 +170,113 @@ export default function ScratchTheCardPage() {
           col: j,
           state: CELL_STATE.HIDDEN,
           type,
-        })
+        });
       }
-      newGrid.push(row)
+      newGrid.push(row);
     }
 
-    setGrid(newGrid)
-    setRevealedCount(0)
-    setSafeCount(totalCells - bombs)
-    setMessage("Reveal cells without hitting bombs")
-  }
+    setGrid(newGrid);
+    setRevealedCount(0);
+    setSafeCount(totalCells - bombs);
+    setMoneyForReveal(0);
+    setMessage("Reveal cells without hitting bombs");
+  };
 
   const startGame = () => {
-    if (bet > balance) {
-      setMessage("Insufficient balance")
-      return false
+    if (bet > balance || bet <= 0) {
+      setMessage("Invalid bet amount");
+      return false;
     }
 
-    setBalance(prev => prev - bet)
-    setGameState(GAME_STATE.PLAYING)
-    setMessage("Good luck!")
-    return true
-  }
+    setGameStats((prev) => ({
+      ...prev,
+      gamesPlayed: prev.gamesPlayed + 1,
+    }));
+    setBalance((prev) => prev - bet);
+    setGameState(GAME_STATE.PLAYING);
+    setMessage("Good luck!");
+    return true;
+  };
 
   const playAgain = () => {
-    initializeGame()
-    if (startGame()) {
-    }
-  }
+    initializeGame();
+    startGame();
+  };
 
-    // reveal all the bombs when the game is lost
   const revealAllBombs = () => {
-      const newGrid = [...grid]
-      for (let i = 0; i < newGrid.length; i++) {
-        for (let j = 0; j < newGrid[i].length; j++) {
-          if (newGrid[i][j].type === CELL_TYPE.BOMB) {
-            newGrid[i][j].state = CELL_STATE.REVEALED
-          }
+    const newGrid = [...grid];
+    for (let i = 0; i < newGrid.length; i++) {
+      for (let j = 0; j < newGrid[i].length; j++) {
+        if (newGrid[i][j].type === CELL_TYPE.BOMB) {
+          newGrid[i][j].state = CELL_STATE.REVEALED;
         }
       }
-      setGrid(newGrid)
-  }
+    }
+    setGrid(newGrid);
+  };
 
-  // reveal a cell and check if the game is won or lost
   const revealCell = (row, col) => {
+    if (gameState !== GAME_STATE.PLAYING) return;
+    if (grid[row][col].state !== CELL_STATE.HIDDEN) return;
 
-    // if user is not playing nothing happens
-    if (gameState !== GAME_STATE.PLAYING) return 
+    const newGrid = [...grid];
+    newGrid[row][col].state = CELL_STATE.REVEALED;
+    setGrid(newGrid);
 
-    // if the cell is already revealed, nothing happens
-    if (grid[row][col].state !== CELL_STATE.HIDDEN) return
+    const cell = newGrid[row][col];
+    setRevealedCount((prev) => prev + 1);
 
-    const newGrid = [...grid]
-    newGrid[row][col].state = CELL_STATE.REVEALED
-    setGrid(newGrid)
-
-    const cell = newGrid[row][col]
-    setRevealedCount(prev => prev + 1)
-
-    // if not all the cells were opened, then we pay user for another opened cell
     if (cell.type === CELL_TYPE.SAFE && revealedCount + 1 < safeCount) {
-      const money_for_reveal = Math.floor(potentialWin / (multiplier.rows * multiplier.cols));
-
-      // Update the total winnings and get the new total
+      const moneyForRevealCell = Math.floor(potentialWin / (multiplier.rows * multiplier.cols));
       setMoneyForReveal((prev) => {
-        const newTotal = prev + money_for_reveal;
-        // Set the message with the current reveal amount and the new total
-        setMessage(`You got ${money_for_reveal} for reveal. You already won ${newTotal}`);
+        const newTotal = prev + moneyForRevealCell;
+        setMessage(`You got ${moneyForRevealCell} for reveal. You already won ${newTotal}`);
         return newTotal;
       });
-
-    console.log(money_for_reveal, moneyForReveal); // Log current reveal and state (before update)
     }
 
-    if (cell.type === CELL_TYPE.BOMB) { // if the cell is a bomb, the game is lost
-      setGameState(GAME_STATE.LOST)
-
-      setMoneyForReveal(0) // reset the winning amount to 0
-
-      setMessage("Boom! You lost all of the winnings!")
-      revealAllBombs()
+    if (cell.type === CELL_TYPE.BOMB) {
+      setGameState(GAME_STATE.LOST);
+      setMoneyForReveal(0);
+      setMessage("Boom! You lost all of the winnings!");
+      revealAllBombs();
     }
-  
-    // if the user opened all the cells
+
     if (cell.type === CELL_TYPE.SAFE && revealedCount + 1 >= safeCount) {
-      const winnings = Math.floor(bet * multiplier.value)
-
-      setBalance(prev => prev + winnings)
-
-      setGameState(GAME_STATE.WON)
-      setMessage(`You win ${winnings}!`)
+      const winnings = Math.floor(bet * multiplier.value);
+      setBalance((prev) => prev + winnings);
+      setGameStats((prev) => ({
+        ...prev,
+        gamesWon: prev.gamesWon + 1,
+        scratchCardTotalWin: prev.scratchCardTotalWin + winnings,
+      }));
+      setGameState(GAME_STATE.WON);
+      setMessage(`You win ${winnings}!`);
     }
+  };
 
-  }
-
-  // reveal a cell after it has been opened
   const renderCell = (cell) => {
-    const { row, col, state, type } = cell
-    let content = null
-    let cellClass = "w-full h-full flex items-center justify-center rounded-lg transition-all"
+    const { row, col, state, type } = cell;
+    let content = null;
+    let cellClass = "w-full h-full flex items-center justify-center rounded-lg transition-all";
 
     if (state === CELL_STATE.HIDDEN) {
-      cellClass += " bg-white shadow-sm cursor-pointer hover:bg-blue-50"
+      cellClass += " bg-white shadow-sm cursor-pointer hover:bg-blue-50";
     } else if (state === CELL_STATE.REVEALED) {
       if (type === CELL_TYPE.BOMB) {
         content = (
           <div className="text-red-500">
             <Bomb className="h-5 w-5" />
           </div>
-        )
-        cellClass += " bg-red-100 shadow-inner"
+        );
+        cellClass += " bg-red-100 shadow-inner";
       } else {
         content = (
           <div className="text-blue-500">
             <Diamond className="h-5 w-5" />
           </div>
-        )
-        cellClass += " bg-blue-100 shadow-inner"
+        );
+        cellClass += " bg-blue-100 shadow-inner";
       }
     }
 
@@ -230,24 +291,22 @@ export default function ScratchTheCardPage() {
           {content}
         </motion.div>
       </div>
-    )
-  }
+    );
+  };
 
-  const TakeLeaveFunction = () => {
+  const takeLeave = () => {
+    setGameState(GAME_STATE.TOOK_LEAVE);
+    setMessage(`You left with ${moneyForReveal}!`);
+    setBalance((prev) => prev + moneyForReveal);
+    setGameStats((prev) => ({
+      ...prev,
+      gamesWon: moneyForReveal > 0 ? prev.gamesWon + 1 : prev.gamesWon,
+      scratchCardTotalWin: prev.scratchCardTotalWin + moneyForReveal,
+    }));
+    revealAllBombs();
+    setMoneyForReveal(0);
+  };
 
-    setGameState(GAME_STATE.TOOK_LEAVE) // sets the game state to took leave
-
-    setMessage(`You left with ${money_for_reveal_cell}!`)
-
-    setBalance(prev => prev + money_for_reveal_cell) // update the balance
-
-    revealAllBombs() // reveal all the bombs
-
-    setMoneyForReveal(0) // reset the winning amount to 0
-  
-  }
-
-  // description of the game
   const ScratchTheCardDescription = (
     <>
       <div>
@@ -283,6 +342,10 @@ export default function ScratchTheCardPage() {
       </div>
     </>
   );
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333]">
@@ -342,12 +405,10 @@ export default function ScratchTheCardPage() {
           </div>
         )}
 
-        {(gameState === GAME_STATE.READY || gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST) && (
+        {(gameState === GAME_STATE.READY || gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST || gameState === GAME_STATE.TOOK_LEAVE) && (
           <div className="mb-6">
             <div className="flex flex-col items-center gap-4 w-full max-w-xs mx-auto">
-              {/* Betting Input */}
               <BettingInput bet={bet} setBet={setBet} balance={balance} gameState={gameState} />
-
               <div className="text-sm text-[#666666] text-center">
                 Potential win: <span className="font-medium text-[#333333]">{potentialWin}</span>
               </div>
@@ -364,13 +425,13 @@ export default function ScratchTheCardPage() {
             ))}
           </div>
         </div>
-        <div className="flex justify-center">
 
-          {(gameState === GAME_STATE.PLAYING) && (
+        <div className="flex justify-center">
+          {gameState === GAME_STATE.PLAYING && (
             <Button
               className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
-              onClick={TakeLeaveFunction}
-              disabled={money_for_reveal_cell == 0}
+              onClick={takeLeave}
+              disabled={moneyForReveal === 0}
             >
               Take & Leave
             </Button>
@@ -385,11 +446,12 @@ export default function ScratchTheCardPage() {
               Start Game
             </Button>
           )}
+
           {(gameState === GAME_STATE.WON || gameState === GAME_STATE.LOST || gameState === GAME_STATE.TOOK_LEAVE) && (
             <Button
               className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
               onClick={playAgain}
-              disabled={bet > balance}
+              disabled={bet > balance || bet <= 0}
             >
               Play Again
             </Button>
@@ -397,5 +459,5 @@ export default function ScratchTheCardPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

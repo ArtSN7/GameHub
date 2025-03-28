@@ -1,15 +1,9 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Trophy, Star, Clock, Coins, Gift, Edit, Save, Check, AlertCircle, X, Sparkles } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ArrowLeft, Coins} from "lucide-react"
+
 
 import GuidePopUp from "./GuidePopUp"
-
 
 export default function InGameHeader({ coins, IsShowGuide, title, description }) {
     const [showGuide, setShowGuide] = useState(false)

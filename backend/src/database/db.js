@@ -26,7 +26,7 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       telegramId TEXT UNIQUE,
       username TEXT NOT NULL UNIQUE,
-      balance REAL NOT NULL DEFAULT 0.0,
+      balance REAL NOT NULL DEFAULT 5000.0,
       level INTEGER DEFAULT 1,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP
     )

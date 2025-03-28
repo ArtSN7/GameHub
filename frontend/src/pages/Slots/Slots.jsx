@@ -1,12 +1,12 @@
+"use client";
+
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Coins, Eye, EyeOff } from "lucide-react";
+import { Coins, Eye, EyeOff } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 import BettingInput from "../Utils/BettingInput";
 import InGameHeader from "../Utils/InGameHeader";
-
+import { useUser } from './../../components/App';
 
 // Slot symbols with their values
 const SYMBOLS = [
@@ -20,14 +20,12 @@ const SYMBOLS = [
   { id: "diamond", icon: "💎", value: 15 },
 ];
 
-
 // Winning combinations and multipliers
 const WINNING_COMBINATIONS = {
   threeOfAKind: 5,
   threeFruits: 2,
   threeHighValue: 4,
 };
-
 
 // Game states
 export const GAME_STATE = {
@@ -36,10 +34,10 @@ export const GAME_STATE = {
   RESULT: "result",
 };
 
-
-
 export default function SlotsPage() {
-  const [balance, setBalance] = useState(1000);
+  const { user, setUser } = useUser();
+
+  const [balance, setBalance] = useState(0);
   const [bet, setBet] = useState(100);
   const [gameState, setGameState] = useState(GAME_STATE.READY);
   const [reelSymbols, setReelSymbols] = useState([
@@ -51,25 +49,96 @@ export default function SlotsPage() {
   const [spinResult, setSpinResult] = useState(null);
   const [winAmount, setWinAmount] = useState(0);
   const [message, setMessage] = useState("Place your bet and spin");
-  const [showPayoutNotes, setShowPayoutNotes] = useState(false); 
+  const [showPayoutNotes, setShowPayoutNotes] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Consolidated game stats
+  const [gameStats, setGameStats] = useState({
+    gamesPlayed: 0,
+    gamesWon: 0,
+    slotsTotalWin: 0,
+  });
 
   const reelControls = [useAnimation(), useAnimation(), useAnimation()];
   const spinInProgress = useRef(false);
 
-  // Clean up on unmount
+  const fetchUserData = async () => {
+    if (!user.dbUser?.id) {
+      console.error('No user ID available');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      const data = await response.json();
+      setBalance(data.balance || 0);
+      setGameStats({
+        gamesPlayed: data.stats?.slotsPlayed || 0,
+        gamesWon: data.stats?.slotsWins || 0,
+        slotsTotalWin: data.stats?.slotsTotalWin || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching user data:', error.message);
+      setMessage("Failed to load user data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateBackend = async () => {
+    try {
+      // Update balance in the database
+      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ balance }),
+      });
+
+      // Update game stats in the database
+      await fetch(`/api/users/${user.dbUser.id}/game`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameType: "slots",
+          played: gameStats.gamesPlayed,
+          won: gameStats.gamesWon,
+          totalWin: gameStats.slotsTotalWin,
+        }),
+      });
+
+      // Refresh user data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Error updating backend:', error.message);
+      setMessage("Failed to update game stats. Please try again.");
+    }
+  };
+
   useEffect(() => {
+    fetchUserData();
     return () => {
       reelControls.forEach((control) => control.stop());
     };
   }, []);
 
+  useEffect(() => {
+    if (gameState === GAME_STATE.RESULT) {
+      updateBackend();
+    }
+  }, [gameState]);
 
-  // Get random symbol
   const getRandomSymbol = () => {
     return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
   };
 
-  // Generate a random reel with more symbols for animation
   const generateSpinningReel = useCallback(() => {
     const reel = [];
     for (let i = 0; i < 30; i++) {
@@ -78,27 +147,27 @@ export default function SlotsPage() {
     return reel;
   }, []);
 
-  // Spin the reels
   const spin = async () => {
     if (gameState === GAME_STATE.SPINNING || spinInProgress.current) return;
-    if (bet > balance) {
-      setMessage("Insufficient balance");
+    if (bet > balance || bet <= 0) {
+      setMessage("Invalid bet amount");
       return;
     }
 
-    setSpinningReels([]); // Clear spinning reels after animation
-
+    setGameStats((prev) => ({
+      ...prev,
+      gamesPlayed: prev.gamesPlayed + 1,
+    }));
+    setBalance((prev) => prev - bet);
+    setSpinningReels([]);
     spinInProgress.current = true;
-    setBalance(balance - bet);
     setGameState(GAME_STATE.SPINNING);
     setMessage("Spinning...");
     setWinAmount(0);
     setSpinResult(null);
 
-    // Stop any ongoing animations
     reelControls.forEach((control) => control.stop());
 
-    // Generate new spinning reels and final result
     const newSpinningReels = [
       generateSpinningReel(),
       generateSpinningReel(),
@@ -110,16 +179,12 @@ export default function SlotsPage() {
       [newSpinningReels[2][27], newSpinningReels[2][28], newSpinningReels[2][29]],
     ];
 
-    // Set spinning reels for animation
     setSpinningReels(newSpinningReels);
-    console.log("Set spinning reels:", newSpinningReels.map(reel => reel.map(s => s.icon)));
 
-    // Reset all reels to top position
     for (let reelIndex = 0; reelIndex < 3; reelIndex++) {
       await reelControls[reelIndex].set({ y: 0 });
     }
 
-    // Animate each reel
     for (let reelIndex = 0; reelIndex < 3; reelIndex++) {
       await reelControls[reelIndex].start({
         y: -64 * (newSpinningReels[reelIndex].length - 3),
@@ -130,7 +195,7 @@ export default function SlotsPage() {
       });
 
       if (reelIndex === 2) {
-        setReelSymbols(finalResult); // Set final result after all reels stop
+        setReelSymbols(finalResult);
         setTimeout(() => {
           checkWin(finalResult);
           spinInProgress.current = false;
@@ -139,7 +204,6 @@ export default function SlotsPage() {
     }
   };
 
-  // Check for winning combinations
   const checkWin = (currentReels) => {
     const payline = [currentReels[0][1], currentReels[1][1], currentReels[2][1]];
     const isThreeOfAKind = payline[0].id === payline[1].id && payline[1].id === payline[2].id;
@@ -153,36 +217,37 @@ export default function SlotsPage() {
     let result = null;
 
     if (isThreeOfAKind) {
-      win = (payline[0].value * bet * WINNING_COMBINATIONS.threeOfAKind) / 10 + bet;
-      resultMessage = `Three ${payline[0].icon}! You win ${win}!`;
+      win = (payline[0].value * bet * WINNING_COMBINATIONS.threeOfAKind) / 10;
+      resultMessage = `Three ${payline[0].icon}! You win ${win + bet}!`;
       result = "threeOfAKind";
     } else if (isThreeFruits) {
-      win = (bet * WINNING_COMBINATIONS.threeFruits) / 10 + bet;
-      resultMessage = "Three fruits! You win!";
+      win = (bet * WINNING_COMBINATIONS.threeFruits) / 10;
+      resultMessage = `Three fruits! You win ${win + bet}!`;
       result = "threeFruits";
     } else if (isThreeHighValue) {
-      win = (bet * WINNING_COMBINATIONS.threeHighValue) / 10 + bet;
-      resultMessage = "Three high value symbols! You win!";
+      win = (bet * WINNING_COMBINATIONS.threeHighValue) / 10;
+      resultMessage = `Three high value symbols! You win ${win + bet}!`;
       result = "threeHighValue";
     }
 
     setWinAmount(win);
-    if (win > 0) { // Add bet amount to balance if won ( win + bet ads to balance )
-      setWinAmount(win + bet);
-    }
     setMessage(resultMessage);
     setSpinResult(result);
     setGameState(GAME_STATE.RESULT);
+
     if (win > 0) {
-      setBalance(balance + win);
+      setBalance((prev) => prev + win + bet);
+      setGameStats((prev) => ({
+        ...prev,
+        gamesWon: prev.gamesWon + 1,
+        slotsTotalWin: prev.slotsTotalWin + win,
+      }));
     }
   };
 
-  // Render reel
   const renderReel = (reelIndex) => {
     const isSpinning = spinningReels[reelIndex] && spinningReels[reelIndex].length > 0;
     const symbols = isSpinning ? spinningReels[reelIndex] : reelSymbols[reelIndex] || [SYMBOLS[0], SYMBOLS[1], SYMBOLS[2]];
-    console.log(`Rendering reel ${reelIndex} (${isSpinning ? "spinning" : "static"}):`, symbols.map(s => s.icon));
 
     return (
       <div className="relative w-16 h-48 overflow-hidden bg-[#e2e8f0] rounded-lg">
@@ -205,12 +270,10 @@ export default function SlotsPage() {
     );
   };
 
-  // Toggle payout notes visibility
   const togglePayoutNotes = () => {
     setShowPayoutNotes(!showPayoutNotes);
   };
 
-  // Payout notes component
   const renderPayoutNotes = () => {
     const fruitSymbols = SYMBOLS.filter(s => ["cherry", "lemon", "orange", "grape"].includes(s.id)).map(s => s.icon).join(", ");
     const highValueSymbols = SYMBOLS.filter(s => ["seven", "bell", "bar", "diamond"].includes(s.id)).map(s => s.icon).join(", ");
@@ -222,24 +285,23 @@ export default function SlotsPage() {
           <li>
             <strong>Three of a Kind (e.g., 🍒🍒🍒):</strong>
             <br />
-            Example: Three 🍒 (value 2) with bet {bet} = {(2 * bet * WINNING_COMBINATIONS.threeOfAKind) + bet}.
+            Example: Three 🍒 (value 2) with bet {bet} = {(2 * bet * WINNING_COMBINATIONS.threeOfAKind) / 10 + bet}.
           </li>
           <li>
-            <strong>Three Fruits ({fruitSymbols}):</strong> 
+            <strong>Three Fruits ({fruitSymbols}):</strong>
             <br />
             Example: 🍒🍋🍊 with bet {bet} = {(bet * WINNING_COMBINATIONS.threeFruits) / 10 + bet}.
           </li>
           <li>
-            <strong>Three High-Value Symbols ({highValueSymbols}):</strong> 
+            <strong>Three High-Value Symbols ({highValueSymbols}):</strong>
             <br />
-            Example: 7️⃣🔔📊 with bet {bet} = {(bet * WINNING_COMBINATIONS.threeHighValue) / 2 + bet}.
+            Example: 7️⃣🔔📊 with bet {bet} = {(bet * WINNING_COMBINATIONS.threeHighValue) / 10 + bet}.
           </li>
         </ul>
       </div>
     );
   };
 
-  // description of slots game
   const SlotsDescription = (
     <>
       <div>
@@ -275,6 +337,9 @@ export default function SlotsPage() {
     </>
   );
 
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333]">
@@ -331,11 +396,8 @@ export default function SlotsPage() {
           </div>
         </div>
 
-        {/* Betting Input */}
         <BettingInput bet={bet} setBet={setBet} balance={balance} gameState={gameState} />
 
-
-        {/* Spin Button */}
         <div className="flex justify-center gap-4">
           <Button
             className="bg-blue-500 hover:bg-blue-600 w-full max-w-xs py-6 rounded-xl text-white font-medium"
@@ -346,9 +408,7 @@ export default function SlotsPage() {
           </Button>
         </div>
 
-
-      {/* Toggle Button for Payout Notes */}
-      <div className="flex justify-center mb-6 mt-4">
+        <div className="flex justify-center mb-6 mt-4">
           <Button
             variant="outline"
             size="sm"
@@ -358,11 +418,9 @@ export default function SlotsPage() {
             {showPayoutNotes ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             {showPayoutNotes ? "Hide Payouts" : "Show Payouts"}
           </Button>
-      </div>
+        </div>
 
-      {/* Payout Notes Section */}
-      {showPayoutNotes && renderPayoutNotes()}
-
+        {showPayoutNotes && renderPayoutNotes()}
       </main>
     </div>
   );

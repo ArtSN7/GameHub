@@ -1,15 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import BettingInput from "../Utils/BettingInput";
 import BlackJackBtns from "./BlackJackBtns";
-
 import InGameHeader from "../Utils/InGameHeader";
+import { useUser } from './../../components/App';
 
 const SUITS = ["♠", "♥", "♦", "♣"];
 const VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -29,6 +26,8 @@ const GAME_STATE = {
 };
 
 export default function BlackjackPage() {
+  const { user, setUser } = useUser();
+
   const [deck, setDeck] = useState([]);
   const [playerHands, setPlayerHands] = useState([[]]);
   const [activeHandIndex, setActiveHandIndex] = useState(0);
@@ -39,14 +38,94 @@ export default function BlackjackPage() {
   const [message, setMessage] = useState("Place your bet to start the game");
   const [bet, setBet] = useState(100);
   const [handBets, setHandBets] = useState([100]);
-  const [balance, setBalance] = useState(1000);
+  const [balance, setBalance] = useState(0);
   const [result, setResult] = useState(null);
   const [lastWin, setLastWin] = useState(0);
   const [insuranceBet, setInsuranceBet] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Consolidated game stats
+  const [gameStats, setGameStats] = useState({
+    gamesPlayed: 0,
+    gamesWon: 0,
+    blackjackTotalWin: 0,
+  });
+
+  // Track deck shuffles for debugging
+  const [shuffleCount, setShuffleCount] = useState(0);
+
+  const fetchUserData = async () => {
+    if (!user.dbUser?.id) {
+      console.error('No user ID available');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      const data = await response.json();
+      setBalance(data.balance || 0);
+      // Optionally initialize game stats from backend if needed
+      setGameStats({
+        gamesPlayed: data.stats?.blackjackGamesPlayed || 0,
+        gamesWon: data.stats?.blackjackWins || 0,
+        blackjackTotalWin: data.stats?.blackjackTotalWin || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching user data:', error.message);
+      setMessage("Failed to load user data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateBackend = async () => {
+    try {
+      // Update balance in the database
+      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ balance }),
+      });
+
+      // Update game stats in the database
+      await fetch(`/api/users/${user.dbUser.id}/game`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameType: "blackjack",
+          played: gameStats.gamesPlayed,
+          won: gameStats.gamesWon,
+          totalWin: gameStats.blackjackTotalWin,
+        }),
+      });
+
+      // Refresh user data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Error updating backend:', error.message);
+      setMessage("Failed to update game stats. Please try again.");
+    }
+  };
 
   useEffect(() => {
+    fetchUserData();
     initializeGame();
   }, []);
+
+  // Update backend only when game ends
+  useEffect(() => {
+    if (gameState === GAME_STATE.GAME_OVER) {
+      updateBackend();
+    }
+  }, [gameState]);
 
   const createDeck = () => {
     const newDeck = [];
@@ -58,18 +137,9 @@ export default function BlackjackPage() {
         }
       }
     }
-    // Verify deck integrity
-    const aceCounts = SUITS.map(suit => ({
-      suit,
-      count: newDeck.filter(card => card.value === "A" && card.suit === suit).length
-    }));
-    console.log("Ace counts in new deck:", aceCounts); // Should be 6 for each suit
     const shuffledDeck = shuffleDeck(newDeck);
-    const shuffledAceCounts = SUITS.map(suit => ({
-      suit,
-      count: shuffledDeck.filter(card => card.value === "A" && card.suit === suit).length
-    }));
-    console.log("Ace counts after shuffle:", shuffledAceCounts); // Should still be 6 for each suit
+    setShuffleCount((prev) => prev + 1);
+    console.log(`Deck shuffled (${shuffleCount + 1} times). Total cards: ${shuffledDeck.length}`);
     return shuffledDeck;
   };
 
@@ -129,6 +199,10 @@ export default function BlackjackPage() {
       return;
     }
 
+    setGameStats((prev) => ({
+      ...prev,
+      gamesPlayed: prev.gamesPlayed + 1,
+    }));
     setBalance((prev) => prev - bet);
 
     let localDeck = [...deck];
@@ -161,7 +235,7 @@ export default function BlackjackPage() {
     setLastWin(0);
     setResult(null);
 
-    setDeck(localDeck); // Update deck state at the end
+    setDeck(localDeck);
 
     const playerHasBlackjack = newPlayerScore === 21 && newPlayerHand.length === 2;
 
@@ -219,7 +293,7 @@ export default function BlackjackPage() {
     newScores[activeHandIndex] = newScore;
     setPlayerScores(newScores);
 
-    setDeck(localDeck); // Update deck state at the end
+    setDeck(localDeck);
 
     if (newScore > 21) {
       if (activeHandIndex < newHands.length - 1) {
@@ -280,7 +354,7 @@ export default function BlackjackPage() {
     newScores[activeHandIndex] = newScore;
     setPlayerScores(newScores);
 
-    setDeck(localDeck); // Update deck state at the end
+    setDeck(localDeck);
 
     if (activeHandIndex < newHands.length - 1) {
       setActiveHandIndex(activeHandIndex + 1);
@@ -328,7 +402,7 @@ export default function BlackjackPage() {
     const newScores = newHands.map((hand) => calculateScore(hand));
     setPlayerScores(newScores);
 
-    setDeck(localDeck); // Update deck state at the end
+    setDeck(localDeck);
 
     setMessage(`Split into ${newHands.length} hands. Playing Hand ${activeHandIndex + 1} now.`);
   };
@@ -356,7 +430,7 @@ export default function BlackjackPage() {
     setMessage("Dealer is playing...");
     let currentDealerHand = [...dHand];
     let currentDealerScore = calculateScore(currentDealerHand);
-    let localDeck = [...deck]; // Use a local copy of the deck to avoid state update issues
+    let localDeck = [...deck];
 
     const dealerPlay = () => {
       if (currentDealerScore < 17 || (currentDealerScore === 17 && isSoftSeventeen(currentDealerHand))) {
@@ -371,8 +445,8 @@ export default function BlackjackPage() {
         }
 
         const card = localDeck[0];
-        console.log(`Dealer draws: ${card.value}${card.suit}`); // Debug log
-        localDeck = localDeck.slice(1); // Update local deck
+        console.log(`Dealer draws: ${card.value}${card.suit}`);
+        localDeck = localDeck.slice(1);
 
         currentDealerHand = [...currentDealerHand, card];
         currentDealerScore = calculateScore(currentDealerHand);
@@ -427,7 +501,7 @@ export default function BlackjackPage() {
         finalMessage.push(`${handLabel} wins with Blackjack!`);
         totalWin += blackjackPayout;
       } else if (!isBlackjack && dealerBlackjack) {
-        finalMessage.push(`${handLabel} loses to Dealer’s Blackjack .`);
+        finalMessage.push(`${handLabel} loses to Dealer’s Blackjack.`);
         totalLoss += betAmount;
       } else if (pScore > dScore) {
         finalMessage.push(`${handLabel} wins!`);
@@ -442,6 +516,12 @@ export default function BlackjackPage() {
     });
 
     const netResult = totalWin - totalLoss;
+    setGameStats((prev) => ({
+      ...prev,
+      gamesWon: netResult > 0 ? prev.gamesWon + 1 : prev.gamesWon,
+      blackjackTotalWin: prev.blackjackTotalWin + netResult,
+    }));
+
     setBalance((prev) => prev + netResult);
     setMessage(finalMessage.join(" "));
     setLastWin(netResult);
@@ -519,6 +599,10 @@ export default function BlackjackPage() {
       </div>
     </>
   );
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#333333] flex flex-col">
