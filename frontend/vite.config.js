@@ -23,7 +23,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://gamehub-production-416a.up.railway.app',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api') // Keep /api in the path
       }
