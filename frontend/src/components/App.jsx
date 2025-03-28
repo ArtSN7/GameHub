@@ -23,6 +23,8 @@ export function App() {
   const themeParams = useThemeParams();
   const viewport = useViewport();
 
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   useEffect(() => {
     // Ensure Telegram WebApp is ready
     if (window.Telegram?.WebApp) {
@@ -85,7 +87,7 @@ export function App() {
 
       const { id: telegramId, username } = lp.initData.user;
       try {
-        const response = await fetch('/api/sync_user', {
+        const response = await fetch(`${backendUrl}/api/sync_user`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
