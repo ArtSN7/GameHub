@@ -9,6 +9,7 @@ import BettingInput from "../../../Utils/BettingInput";
 import { Button } from "@/components/ui/button";
 import { WIDTH, HEIGHT } from "../game/constants";
  import { motion } from "framer-motion";
+ import { useUser } from './../../../../components/App'; // Adjust the path based on your project structure
 
 const PlinkoDescription = (
   <>
@@ -31,6 +32,8 @@ const PlinkoDescription = (
 );
 
 export function Game() {
+  const { user, setUser } = useUser(); // Get user context to access user.dbUser.id
+
   const ballManagerRef = useRef(null);
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
@@ -38,10 +41,61 @@ export function Game() {
 
   const [message, setMessage] = useState("Drop some balls!");
 
-  const [balance, setBalance] = useState(1000);
+  const [balance, setBalance] = useState(0);
   const [bet, setBet] = useState(100);
   const [gameState, setGameState] = useState("IDLE");
   const [canvasSize, setCanvasSize] = useState({ width: WIDTH, height: HEIGHT });
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  // Fetch user balance from backend
+  const fetchUserBalance = async () => {
+    if (!user.dbUser?.id) {
+      console.error('No user ID available');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      const data = await response.json();
+      setBalance(data.balance || 0);
+    } catch (error) {
+      console.error('Error fetching user balance:', error.message);
+      setMessage("Failed to load balance. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update user balance on backend
+  const updateBackendBalance = async (newBalance) => {
+    try {
+      const response = await fetch(`/api/users/${user.dbUser.id}/balance`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ balance: newBalance }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update balance');
+      }
+      // Optionally refetch balance to ensure sync
+      await fetchUserBalance();
+    } catch (error) {
+      console.error('Error updating backend balance:', error.message);
+      setMessage("Failed to update balance. Please try again.");
+    }
+  };
+
+  // Fetch balance on component mount
+  useEffect(() => {
+    fetchUserBalance();
+  }, []);
 
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -75,7 +129,11 @@ export function Game() {
     const newBallManager = new BallManager(canvas, (index, startX) => {
       const multiplier = newBallManager.sinks[index].multiplier || 0;
       const payout = Math.round(bet * multiplier);
-      setBalance((prev) => prev + payout);
+      setBalance((prev) => {
+        const newBalance = prev + payout;
+        updateBackendBalance(newBalance); // Update backend after payout
+        return newBalance;
+      });
       setGameState("IDLE");
       setMessage(`Landed in ${multiplier}x sink!`);
     });
@@ -107,7 +165,11 @@ export function Game() {
 
   const handleAddBall = () => {
     if (!ballManagerRef.current || bet > balance || bet <= 0) return;
-    setBalance((prev) => prev - bet);
+    setBalance((prev) => {
+      const newBalance = prev - bet;
+      updateBackendBalance(newBalance); // Update backend after placing bet
+      return newBalance;
+    });
     setGameState("DROPPING");
     setMessage(`Dropping...`);
 
