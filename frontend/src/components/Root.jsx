@@ -1,5 +1,4 @@
 import { SDKProvider, useLaunchParams } from '@telegram-apps/sdk-react';
-import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { useEffect, useMemo } from 'react';
 
 import App from '@/components/App.jsx';
@@ -30,9 +29,6 @@ export function Inner() {
   }
 
   const debug = lp.startParam === 'debug';
-  const manifestUrl = useMemo(() => {
-    return new URL('tonconnect-manifest.json', window.location.href).toString();
-  }, []);
 
   useEffect(() => {
     console.log('Inner render - Launch Params:', lp);
@@ -42,11 +38,9 @@ export function Inner() {
   }, [debug]);
 
   return (
-    <TonConnectUIProvider manifestUrl={manifestUrl}>
       <SDKProvider acceptCustomStyles debug={debug}>
         <App />
       </SDKProvider>
-    </TonConnectUIProvider>
   );
 }
 export function Root() {
