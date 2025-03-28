@@ -124,6 +124,11 @@ export default function BlackjackPage() {
   useEffect(() => {
     if (gameState === GAME_STATE.GAME_OVER) {
       updateBackend();
+      setGameStats({
+        gamesPlayed: 0,
+        gamesWon: 0,
+        blackjackTotalWin: 0,
+      })
     }
   }, [gameState]);
 
@@ -519,7 +524,7 @@ export default function BlackjackPage() {
     setGameStats((prev) => ({
       ...prev,
       gamesWon: netResult > 0 ? prev.gamesWon + 1 : prev.gamesWon,
-      blackjackTotalWin: prev.blackjackTotalWin + netResult,
+      blackjackTotalWin: netResult > 0 ? prev.blackjackTotalWin + netResult : prev.blackjackTotalWin + 0,
     }));
 
     setBalance((prev) => prev + netResult);
@@ -527,6 +532,8 @@ export default function BlackjackPage() {
     setLastWin(netResult);
     setResult(netResult > 0 ? "win" : netResult < 0 ? "lose" : "push");
     setDealerScore(dScore);
+
+
   };
 
   const isBetValid = () => bet >= 10 && bet <= balance;
