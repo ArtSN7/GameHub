@@ -105,7 +105,7 @@ export function App() {
           dbUser, // Store the database user data (including id)
         }));
       } catch (error) {
-        console.error('Error syncing user with backend:', error.message);
+        console.error('Error syncing user with backend:', error);
       }
     };
 
