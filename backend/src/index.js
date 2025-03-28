@@ -5,8 +5,21 @@ import apiRoutes from './routes/api.js';
 const app = express();
 const port =  5000;
 
+// Allow multiple origins
+const allowedOrigins = [
+  'https://web-production-3cb88.up.railway.app',
+  'http://localhost:3000',
+];
+
 app.use(cors({
-  origin: "https://web-production-3cb88.up.railway.app",
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type"],
 }));
