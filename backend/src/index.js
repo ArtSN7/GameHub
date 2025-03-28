@@ -5,7 +5,11 @@ import apiRoutes from './routes/api.js';
 const app = express();
 const port =  5000;
 
-app.use(cors());
+app.use(cors({
+  origin: "https://web-production-3cb88.up.railway.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"],
+}));
 app.use(express.json());
 
 // Mount the API routes
