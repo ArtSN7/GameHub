@@ -32,6 +32,9 @@ const PlinkoDescription = (
 );
 
 export function Game() {
+
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   const { user, setUser } = useUser(); // Get user context to access user.dbUser.id
 
   const ballManagerRef = useRef(null);
@@ -57,7 +60,7 @@ export function Game() {
     }
 
     try {
-      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      const response = await fetch(`${backendUrl}/api/users/${user.dbUser.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -74,7 +77,7 @@ export function Game() {
   // Update user balance on backend
   const updateBackendBalance = async (newBalance) => {
     try {
-      const response = await fetch(`/api/users/${user.dbUser.id}/balance`, {
+      const response = await fetch(`${backendUrl}/api/users/${user.dbUser.id}/balance`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

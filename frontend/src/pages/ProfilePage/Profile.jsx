@@ -21,6 +21,8 @@ import Promocodes from "./Components/Promocodes/Promocodes";
 import { initialAds, watchAdFunc, claimAdRewardFunc, generateMoreAds } from "./Components/Rewards/AdUtils";
 
 export default function ProfilePage() {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   const { user, setUser } = useUser();
   const [userData, setUserData] = useState(null);
   const [coins, setCoins] = useState(0);
@@ -54,7 +56,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      const response = await fetch(`${backendUrl}/api/users/${user.dbUser.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -99,7 +101,7 @@ export default function ProfilePage() {
     setShowConfetti(true);
 
     // Update balance in the database
-    fetch(`/api/users/${user.dbUser.id}/balance`, {
+    fetch(`${backendUrl}/api/users/${user.dbUser.id}/balance`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -125,7 +127,7 @@ export default function ProfilePage() {
 
     try {
       // Update balance in the database
-      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+      await fetch(`${backendUrl}/api/users/${user.dbUser.id}/balance`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -134,7 +136,7 @@ export default function ProfilePage() {
       });
 
       // Update bonus in the database
-      await fetch(`/api/users/${user.dbUser.id}/bonus`, {
+      await fetch(`${backendUrl}/api/users/${user.dbUser.id}/bonus`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +182,7 @@ export default function ProfilePage() {
 
     try {
       // Update balance in the database
-      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+      await fetch(`${backendUrl}/api/users/${user.dbUser.id}/balance`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +191,7 @@ export default function ProfilePage() {
       });
 
       // Update promo code in the database
-      await fetch(`/api/users/${user.dbUser.id}/bonus`, {
+      await fetch(`${backendUrl}/api/users/${user.dbUser.id}/bonus`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

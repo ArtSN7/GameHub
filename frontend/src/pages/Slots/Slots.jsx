@@ -35,6 +35,7 @@ export const GAME_STATE = {
 };
 
 export default function SlotsPage() {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
   const { user, setUser } = useUser();
 
   const [balance, setBalance] = useState(0);
@@ -70,7 +71,7 @@ export default function SlotsPage() {
     }
 
     try {
-      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      const response = await fetch(`${backendUrl}/api/users/${user.dbUser.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -92,7 +93,7 @@ export default function SlotsPage() {
   const updateBackend = async () => {
     try {
       // Update balance in the database
-      await fetch(`/api/users/${user.dbUser.id}/balance`, {
+      await fetch(`${backendUrl}/api/users/${user.dbUser.id}/balance`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +102,7 @@ export default function SlotsPage() {
       });
 
       // Update game stats in the database
-      await fetch(`/api/users/${user.dbUser.id}/game`, {
+      await fetch(`${backendUrl}/api/users/${user.dbUser.id}/game`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

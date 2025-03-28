@@ -4,6 +4,9 @@ import { useUser } from './../../components/App';
 import { useState, useEffect } from "react";
 
 export default function BalanceComponent() {
+  
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
   const { user } = useUser(); // Destructure user from useUser
 
   const [balance, setBalance] = useState(0);
@@ -20,7 +23,7 @@ export default function BalanceComponent() {
     }
 
     try {
-      const response = await fetch(`/api/users/${user.dbUser.id}`);
+      const response = await fetch(`${backendUrl}/api/users/${user.dbUser.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
