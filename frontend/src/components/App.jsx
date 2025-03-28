@@ -24,6 +24,8 @@ export function App() {
   const viewport = useViewport();
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  console.log('Backend URL:', backendUrl);
+  
 
   useEffect(() => {
     // Ensure Telegram WebApp is ready
